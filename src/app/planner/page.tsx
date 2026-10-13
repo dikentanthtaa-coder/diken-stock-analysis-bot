@@ -1,4 +1,5 @@
 export const metadata = { title: "Planner" };
+import { Suspense } from "react";
 import { PlannerClient } from "./ui";
 
 export default function PlannerPage() {
@@ -9,7 +10,9 @@ export default function PlannerPage() {
         Long swing trades only. Quantity = min(risk-based, budget-based).
         Research tool — nothing here places orders.
       </p>
-      <PlannerClient />
+      <Suspense fallback={null}>
+        <PlannerClient />
+      </Suspense>
     </main>
   );
 }

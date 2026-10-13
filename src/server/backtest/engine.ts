@@ -147,7 +147,7 @@ export function computeTrades(candles: Candle[], p: BacktestParams): BacktestTra
   return trades;
 }
 
-function summarize(label: string, candles: Candle[], trades: BacktestTrade[]): PeriodResult {
+export function summarize(label: string, candles: { date: string }[], trades: BacktestTrade[]): PeriodResult {
   const wins = trades.filter((t) => t.netReturnPct > 0);
   const losses = trades.filter((t) => t.netReturnPct <= 0);
   const grossWin = wins.reduce((a, t) => a + t.netReturnPct, 0);

@@ -9,7 +9,8 @@ export type ActivityKind =
   | "backtest"
   | "planner"
   | "knowledge"
-  | "learning";
+  | "learning"
+  | "signal";
 
 export interface ActivityInput {
   kind: ActivityKind;

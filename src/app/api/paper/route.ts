@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { logActivity } from "@/server/activity";
+import { checkTrade } from "@/server/discipline/service";
 
 export async function GET() {
   const trades = await db.paperTrade.findMany({
@@ -22,6 +23,11 @@ const createSchema = z.object({
   thesis: z.string().max(2000).optional(),
   status: z.enum(["planned", "open"]).default("open"),
   analysisId: z.string().optional(),
+  // Pre-trade gate: warnings must be acknowledged; hard fails cannot be overridden.
+  acknowledge: z.boolean().default(false),
+  signal: z.enum(["BUY", "SELL", "HOLD"]).nullish(),
+  dataStatus: z.string().max(20).nullish(),
+  atr: z.number().positive().nullish(),
 });
 
 export async function POST(req: Request) {
@@ -37,6 +43,29 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { ok: false, error: "Stop-loss must be below entry for a long paper trade." },
       { status: 422 },
+    );
+  }
+  const gate = await checkTrade({
+    direction: "long",
+    entry: d.entryPrice,
+    stop: d.stopLoss,
+    target1: d.target1 ?? null,
+    quantity: d.quantity,
+    signal: d.signal ?? null,
+    dataStatus: d.dataStatus ?? null,
+    atr: d.atr ?? null,
+    thesis: d.thesis ?? null,
+  });
+  if (gate.result.verdict === "blocked") {
+    return NextResponse.json(
+      { ok: false, error: `Pre-trade gate blocked this trade. ${gate.result.summary}`, gate: gate.result },
+      { status: 422 },
+    );
+  }
+  if (gate.result.verdict === "caution" && !d.acknowledge) {
+    return NextResponse.json(
+      { ok: false, error: "Pre-trade gate has warnings; acknowledge them to record the trade.", gate: gate.result, needsAcknowledge: true },
+      { status: 409 },
     );
   }
   const stock = await db.stock.upsert({
@@ -55,7 +84,9 @@ export async function POST(req: Request) {
       target1: d.target1 ?? null,
       target2: d.target2 ?? null,
       quantity: d.quantity,
-      thesis: d.thesis,
+      thesis: [d.thesis, `[Gate: ${gate.result.verdict}${gate.result.verdict === "caution" ? ", warnings acknowledged" : ""} · risk ${gate.result.riskPct.toFixed(2)}%${gate.result.rewardRisk != null ? ` · R:R ${gate.result.rewardRisk.toFixed(2)}` : ""}]`]
+        .filter(Boolean)
+        .join("\n"),
       analysisId: d.analysisId,
     },
   });
@@ -70,10 +101,12 @@ export async function POST(req: Request) {
       target1: d.target1 ?? null,
       target2: d.target2 ?? null,
       quantity: d.quantity,
+      gate: gate.result.verdict,
+      riskPct: gate.result.riskPct,
     },
     symbol: stock.symbol,
     exchange: stock.exchange,
     href: "/paper",
   });
-  return NextResponse.json({ ok: true, tradeId: trade.id });
+  return NextResponse.json({ ok: true, tradeId: trade.id, gate: gate.result });
 }

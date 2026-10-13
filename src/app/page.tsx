@@ -5,6 +5,17 @@ import { StackedColumns, LineChart, HBars } from "./charts";
 import { SERIES_COLORS } from "./chart-colors";
 import { ActivityList } from "./activity-list";
 import { getDashboardData, ACTIVITY_SERIES, timeOfDay, dayKey, shortDay } from "@/server/dashboard";
+import { getMarketRegime } from "@/server/market/regime";
+import { getLiveRecord } from "@/server/signal/postmortem";
+import { connection } from "next/server";
+
+const POSTURE_STYLE: Record<string, string> = {
+  "confirmed-uptrend": "bg-emerald-100 text-emerald-800",
+  "under-pressure": "bg-amber-100 text-amber-800",
+  "rally-attempt": "bg-sky-100 text-sky-800",
+  correction: "bg-red-100 text-red-800",
+};
+const TONE: Record<string, string> = { good: "text-emerald-700", warn: "text-amber-700", bad: "text-red-700", neutral: "text-zinc-600" };
 
 export default function DashboardPage() {
   return (
@@ -60,7 +71,12 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 async function DashboardContent() {
-  const d = await getDashboardData();
+  await connection(); // market regime + grading use the current time
+  const [d, regime, record] = await Promise.all([
+    getDashboardData(),
+    getMarketRegime().catch(() => null),
+    getLiveRecord({ take: 0 }).catch(() => null),
+  ]);
   const c = d.counts;
   const activitySeries = ACTIVITY_SERIES.map((name, i) => ({ name, color: i === 5 ? "#a1a1aa" : SERIES_COLORS[i] }));
   const totalActivityWeek = d.activity.reduce((s, b) => s + b.values.reduce((a, v) => a + v, 0), 0);
@@ -83,7 +99,7 @@ async function DashboardContent() {
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
             <p className="mt-1 text-sm text-indigo-100">
-              Everything you&apos;ve done in the app · all market data is end-of-day, never real-time.
+              Everything you&apos;ve done in the app · Research uses end-of-day data; Live Signals show their data status.
             </p>
           </div>
           <div className="inline-flex items-baseline gap-2 rounded-full bg-white/15 px-3 py-1.5 ring-1 ring-white/25 sm:block sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-right sm:ring-0">
@@ -113,6 +129,47 @@ async function DashboardContent() {
             <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-zinc-400 sm:text-xs">{label}</p>
           </Link>
         ))}
+      </div>
+
+      {/* Market posture + live signal record */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <Card title="Market posture (NIFTY)" sub="Exposure ceiling from index trend, distribution days, breadth proxy and VIX. Vetoes new longs in a correction." action={<Link href="/signals" className="text-xs text-indigo-600 hover:underline">Live Signals →</Link>}>
+          {regime ? (
+            <>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className={`rounded-full px-3 py-1 text-sm font-medium ${POSTURE_STYLE[regime.posture]}`}>{regime.posture.replace("-", " ")}</span>
+                <span className="text-sm text-zinc-700">long exposure ≤ <b>{regime.exposureCeilingPct}%</b></span>
+              </div>
+              <p className="mt-2 text-xs text-zinc-600">{regime.headline}</p>
+              <ul className="mt-2 grid gap-x-4 gap-y-0.5 text-xs sm:grid-cols-2">
+                {regime.checks.map((c) => (
+                  <li key={c.id} className="flex justify-between gap-2"><span className="text-zinc-500">{c.label}</span><span className={`text-right ${TONE[c.tone]}`}>{c.value}</span></li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <Empty>Index data unavailable right now.</Empty>
+          )}
+        </Card>
+        <Card title="Live Signals record" sub="Forward-tested: each emitted BUY/SELL graded on what happened next." action={<Link href="/journal#signal-record" className="text-xs text-indigo-600 hover:underline">Journal →</Link>}>
+          {record && record.totals.total > 0 ? (
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                ["Signals", `${record.totals.total}`],
+                ["Graded", `${record.totals.evaluated}`],
+                ["Hit T1", record.totals.hitRate != null ? `${(record.totals.hitRate * 100).toFixed(0)}%` : "—"],
+                ["Avg R", record.totals.avgResultR != null ? `${record.totals.avgResultR > 0 ? "+" : ""}${record.totals.avgResultR}` : "—"],
+              ].map(([k, v]) => (
+                <div key={k} className="rounded-md bg-zinc-50 px-3 py-2">
+                  <p className="text-lg font-semibold tabular-nums text-zinc-900">{v}</p>
+                  <p className="text-[11px] uppercase tracking-wide text-zinc-400">{k}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty>No signals recorded yet — every BUY/SELL shown on Live Signals is logged and graded automatically.</Empty>
+          )}
+        </Card>
       </div>
 
       {/* Activity over time */}

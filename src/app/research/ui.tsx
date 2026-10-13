@@ -90,8 +90,9 @@ export function ResearchClient() {
     const symbol = searchParams.get("symbol")?.toUpperCase();
     const exchange = searchParams.get("exchange");
     if (!symbol || (exchange !== "NSE" && exchange !== "BSE")) return;
-    autoRan.current = true;
     const t = setTimeout(() => {
+      if (autoRan.current) return;
+      autoRan.current = true;
       void analyze({ symbol, exchange, name: symbol });
     }, 0);
     return () => clearTimeout(t);

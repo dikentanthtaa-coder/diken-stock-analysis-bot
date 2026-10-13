@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface PlanOk {
   ok: true;
@@ -31,11 +32,13 @@ const inr = (n: number) =>
   });
 
 export function PlannerClient() {
+  // Prefilled by the Live Signals page: /planner?entry=&stop=&target1=&target2=
+  const sp = useSearchParams();
   const [form, setForm] = useState({
-    entryPrice: "",
-    stopLoss: "",
-    target1: "",
-    target2: "",
+    entryPrice: sp.get("entry") ?? "",
+    stopLoss: sp.get("stop") ?? "",
+    target1: sp.get("target1") ?? "",
+    target2: sp.get("target2") ?? "",
     budget: "100000",
     riskPercent: "1",
     capital: "100000",

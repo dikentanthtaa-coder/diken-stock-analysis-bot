@@ -10,6 +10,7 @@ export const KIND_STYLE: Record<FeedKind, string> = {
   planner: "bg-violet-100 text-violet-800",
   knowledge: "bg-emerald-100 text-emerald-800",
   learning: "bg-pink-100 text-pink-800",
+  signal: "bg-cyan-100 text-cyan-800",
 };
 
 export function ActivityList({ items, grouped = false }: { items: { id: string; kind: FeedKind; title: string; href: string | null; at: Date; meta?: string | null }[]; grouped?: boolean }) {

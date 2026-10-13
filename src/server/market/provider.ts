@@ -1,4 +1,5 @@
 import "server-only";
+import type { Bar, Interval, MarketState } from "./intervals";
 
 // Provider-independent market data contracts. The analysis engine only
 // sees these types, so providers can be swapped without touching it.
@@ -53,4 +54,40 @@ export interface MarketDataProvider {
 export interface SymbolSearchProvider {
   readonly id: string;
   searchSymbols(query: string): Promise<SymbolResult[]>;
+}
+
+// ---------- Intraday / multi-timeframe ----------
+
+export type { Bar, Interval, MarketState };
+
+export interface QuoteMeta {
+  /** Last trade price reported by the provider (may be newer than the last bar). */
+  lastPrice: number | null;
+  /** Unix seconds of the last trade the provider knows about. */
+  lastTradeTime: number | null;
+  previousClose: number | null;
+  /** Provider-declared delay in minutes; null when the provider does not say. */
+  declaredDelayMin: number | null;
+  currency: string | null;
+  longName: string | null;
+}
+
+export interface IntradayResponse {
+  interval: Interval;
+  /** Closed and forming bars, oldest first, on the interval grid. */
+  bars: Bar[];
+  /** Whether the last bar's window has not yet ended (still forming). */
+  lastBarForming: boolean;
+  source: string;
+  fetchedAt: string;
+  quote: QuoteMeta;
+}
+
+export interface IntradayProvider {
+  readonly id: string;
+  getIntradayBars(
+    symbol: string,
+    exchange: "NSE" | "BSE",
+    interval: Interval,
+  ): Promise<IntradayResponse>;
 }

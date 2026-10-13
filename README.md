@@ -22,11 +22,34 @@ order-placement tool, not investment advice.**
   explicit evidence for and against, confirmation and invalidation conditions,
   and knowledge-base rules matched to current signals. Outcomes:
   Potential Buy Setup / Watchlist-Wait / No Trade / Insufficient Data.
+- **Live Signals** — enter any NSE/BSE name or ticker, pick 1m / 5m / 15m /
+  1h / 4h / 1D, and get a BUY / SELL / HOLD read from a multi-timeframe vote
+  (primary + two higher timeframes + daily anchor) over EMA 20/50/200,
+  market structure, RSI, MACD, Bollinger Bands, session VWAP, volume and
+  candlestick patterns (Doji, Hammer, Engulfing, Morning/Evening Star, …).
+  Shows a confidence score (agreement, not probability), entry / stop /
+  targets with risk-to-reward, the full indicator breakdown and cautions.
+  Live intraday bars come from Yahoo Finance's chart endpoint (keyless) or
+  Twelve Data when `TWELVEDATA_API_KEY` is set; the page always shows the
+  data status — LIVE with the observed lag, DELAYED, market CLOSED or STALE —
+  and auto-refreshes at a cadence tied to the timeframe. Never fabricates a
+  price, candle or signal.
+- **Market regime & discipline** — NIFTY posture (trend, distribution days,
+  breadth proxy, India VIX) with an exposure ceiling that vetoes new longs in
+  a correction; a pre-trade gate (risk per trade, R:R, circuit breaker on
+  daily/weekly losses, exposure vs ceiling, position count, engine
+  alignment, data freshness, thesis) that must pass before a paper trade is
+  recorded; Minervini trend template on the daily chart; and a
+  forward-tested live record of every signal the engine emitted (hit target 1
+  before stop?). Optional AI narrative over the engine's own numbers via
+  `AI_PROVIDER=claude`.
 - **Trade Planner** — long-swing position sizing:
   risk/share = entry − stop; risk qty = floor(risk budget ÷ risk/share);
   budget qty = floor(budget ÷ all-in cost/share); final = min of both.
   R:R, loss-at-stop, profit at targets, estimated costs, gap-risk warnings.
-- **Backtesting** — walk-forward breakout+volume simulation, no look-ahead
+- **Backtesting** — two strategies: (a) the Live Signals engine replayed
+  bar-by-bar on any timeframe with the same higher-timeframe veto, and (b)
+  a walk-forward breakout+volume simulation. Both: no look-ahead
   (fills at next open), stop-before-target intrabar convention, costs +
   slippage, 60/20/20 development/validation/out-of-sample split, win rate,
   expectancy (avg R), profit factor, max drawdown, full trade list.

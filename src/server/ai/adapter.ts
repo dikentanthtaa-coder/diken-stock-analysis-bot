@@ -1,4 +1,5 @@
 import "server-only";
+import Anthropic from "@anthropic-ai/sdk";
 import { env } from "@/lib/env";
 
 // Provider-independent AI adapter. The core app never requires AI:
@@ -92,7 +93,74 @@ class GeminiProvider implements AiProvider {
   }
 }
 
+/** Claude provider via the official Anthropic SDK. Uses adaptive thinking
+ *  (always on for Opus 5.5) with explicit medium effort, and the server-side
+ *  refusal fallback so a declined request is re-run on a fallback model
+ *  inside the same call. UNVERIFIED until a key is configured. */
+class ClaudeProvider implements AiProvider {
+  readonly id = "claude";
+  readonly available = true;
+  private client: Anthropic;
+  constructor(apiKey: string) {
+    this.client = new Anthropic({ apiKey, maxRetries: 2, timeout: 90_000 });
+  }
+
+  private async generate(system: string, prompt: string): Promise<string> {
+    try {
+      const response = await this.client.beta.messages.create({
+        model: "claude-opus-5-5",
+        max_tokens: 16000,
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
+        output_config: { effort: "medium" },
+        system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+        messages: [{ role: "user", content: prompt }],
+      });
+      if (response.stop_reason === "refusal") {
+        throw new Error(
+          `Claude declined this request${response.stop_details?.category ? ` (${response.stop_details.category})` : ""}.`,
+        );
+      }
+      return response.content
+        .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
+        .map((b) => b.text)
+        .join("");
+    } catch (error) {
+      if (error instanceof Anthropic.AuthenticationError) throw new Error("Claude API key rejected (AI_API_KEY).");
+      if (error instanceof Anthropic.RateLimitError) throw new Error("Claude API rate limit reached; try again shortly.");
+      if (error instanceof Anthropic.APIError) throw new Error(`Claude API error ${error.status}: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async extractRules(input: { videoTitle: string; transcript: string }): Promise<AiRuleExtraction[]> {
+    const system = [
+      "You extract trading rules EXPLICITLY TAUGHT in a Hindi stock-trading course transcript.",
+      "Only include rules the teacher clearly states. Never invent or complete partial rules.",
+      'Return ONLY a JSON array of {"title","ruleText","timestamp","interpretation"}: ruleText is an English rendering of what was taught; timestamp is mm:ss from the [mm:ss] markers; interpretation is your own reading, kept separate.',
+    ].join(" ");
+    const text = await this.generate(system, `Video: ${input.videoTitle}
+
+Transcript:
+${input.transcript}`);
+    const match = text.match(/\[[\s\S]*\]/);
+    if (!match) return [];
+    const parsed = JSON.parse(match[0]) as AiRuleExtraction[];
+    return parsed.filter((r) => r.title && r.ruleText);
+  }
+
+  async explain(prompt: string): Promise<string> {
+    return this.generate(
+      "You are a disciplined, quantitative equity-research assistant for Indian (NSE/BSE) stocks. You explain mechanically generated technical signals. You never guarantee outcomes, never invent numbers, cite only the values given, and state the data's freshness. Plain prose, no markdown headers.",
+      prompt,
+    );
+  }
+}
+
 export function getAiProvider(): AiProvider {
+  if (env.AI_PROVIDER === "claude" && env.AI_API_KEY) {
+    return new ClaudeProvider(env.AI_API_KEY);
+  }
   if (env.AI_PROVIDER === "gemini" && env.AI_API_KEY) {
     return new GeminiProvider(env.AI_API_KEY);
   }

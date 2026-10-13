@@ -4,6 +4,9 @@ import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { providerHealth } from "@/server/market/service";
+import { intradayHealth } from "@/server/market/intraday";
+import { getGateSettings } from "@/server/discipline/service";
+import { DisciplineForm } from "./discipline-form";
 
 export default function SettingsPage() {
   return (
@@ -21,9 +24,11 @@ export default function SettingsPage() {
 
 async function SettingsContent() {
   await connection(); // live health checks — always render at request time
-  const [health, stockCount, candleCount, videoCount, analysisCount] =
+  const [health, intraday, gateSettings, stockCount, candleCount, videoCount, analysisCount] =
     await Promise.all([
       providerHealth(),
+      intradayHealth(),
+      getGateSettings(),
       db.stock.count(),
       db.candle.count(),
       db.video.count(),
@@ -61,15 +66,54 @@ async function SettingsContent() {
       </section>
 
       <section className="mt-8">
+        <h2 className="font-medium text-zinc-900">Intraday / live signal providers</h2>
+        <ul className="mt-2 space-y-2 text-sm">
+          {intraday.map((h) => (
+            <li
+              key={h.id}
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-zinc-200 p-3"
+            >
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${h.ok ? "bg-emerald-500" : h.id === "twelvedata" && !env.TWELVEDATA_API_KEY ? "bg-zinc-300" : "bg-red-500"}`}
+              />
+              <span className="font-medium uppercase">{h.id}</span>
+              <span className="text-zinc-500">{h.detail}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs text-zinc-500">
+          Live Signals use Yahoo Finance&apos;s public chart endpoint by default
+          (keyless; NSE/BSE 1m–1d bars; the page shows the observed lag between
+          the last trade and each fetch). Set <code>TWELVEDATA_API_KEY</code>{" "}
+          (free tier: 8 req/min, 800/day) to make Twelve Data&apos;s licensed API
+          the primary intraday source with Yahoo as fallback. Intraday bars are
+          cached in memory only (15 s–5 min by timeframe) and never fabricated:
+          when every provider fails, the page shows the last fetch marked STALE.
+        </p>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="font-medium text-zinc-900">Discipline rules (pre-trade gate &amp; circuit breaker)</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Used by the pre-trade gate on Live Signals and Paper: risk per trade, exposure vs the
+          market ceiling, position count, and the daily/weekly loss circuit breaker computed from
+          closed paper trades. Hard fails cannot be overridden; warnings must be acknowledged.
+        </p>
+        <DisciplineForm initial={gateSettings} />
+      </section>
+
+      <section className="mt-8">
         <h2 className="font-medium text-zinc-900">API keys (server-side only)</h2>
         <dl className="mt-2 grid grid-cols-1 gap-y-1 text-sm sm:grid-cols-[14rem_1fr] sm:gap-y-2">
           <dt className="text-xs text-zinc-500 sm:text-sm">MARKET_DATA_API_KEY</dt>
           <dd className="mb-2 sm:mb-0">{keyStatus(env.MARKET_DATA_API_KEY)}</dd>
+          <dt className="text-xs text-zinc-500 sm:text-sm">TWELVEDATA_API_KEY</dt>
+          <dd className="mb-2 sm:mb-0">{keyStatus(env.TWELVEDATA_API_KEY)}</dd>
           <dt className="text-xs text-zinc-500 sm:text-sm">AI_PROVIDER / AI_API_KEY</dt>
           <dd className="mb-2 sm:mb-0">
             {env.AI_PROVIDER && env.AI_API_KEY
-              ? `configured (${env.AI_PROVIDER}) — unverified until first use`
-              : "not set (optional — heuristic extraction active)"}
+              ? `configured (${env.AI_PROVIDER}${env.AI_PROVIDER === "claude" ? ", claude-opus-5-5" : ""}) — unverified until first use`
+              : "not set (optional — enables the AI narrative on Live Signals and AI rule extraction; AI_PROVIDER=claude or gemini)"}
           </dd>
           <dt className="text-xs text-zinc-500 sm:text-sm">YOUTUBE_API_KEY</dt>
           <dd className="mb-2 sm:mb-0">{keyStatus(env.YOUTUBE_API_KEY)}</dd>
@@ -100,8 +144,9 @@ async function SettingsContent() {
 
       <section className="mt-8 rounded-md bg-zinc-50 p-4 text-xs text-zinc-500">
         <p>
-          · All data is end-of-day; nothing in this app is real-time or an
-          order-placement facility.
+          · Research/Backtest/Planner use end-of-day data; Live Signals use
+          intraday bars whose status (live / delayed / closed / stale) is always
+          displayed. Nothing here places orders.
         </p>
         <p>
           · Monthly cost of the current setup: ₹0 (Supabase free tier, Vercel Hobby, keyless free

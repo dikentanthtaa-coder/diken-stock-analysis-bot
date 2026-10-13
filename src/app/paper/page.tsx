@@ -1,4 +1,5 @@
 export const metadata = { title: "Paper trading" };
+import { Suspense } from "react";
 import { PaperClient } from "./ui";
 
 export default function PaperPage() {
@@ -9,7 +10,9 @@ export default function PaperPage() {
         Hypothetical trades only — nothing is sent to any broker. Record the
         thesis when you enter so the journal can compare it with the outcome.
       </p>
-      <PaperClient />
+      <Suspense fallback={null}>
+        <PaperClient />
+      </Suspense>
     </main>
   );
 }

@@ -2,19 +2,82 @@ import "server-only";
 import {
   type MarketDataProvider,
   type SymbolSearchProvider,
+  type IntradayProvider,
+  type IntradayResponse,
   type CandleResponse,
   type DailyCandle,
   type SymbolResult,
+  type Interval,
   ProviderError,
 } from "./provider";
+import { resampleTo4h } from "./intervals";
+import { parseYahooChart, type YahooChartBody } from "./yahoo-parse";
+
+// Yahoo interval → (yahoo interval param, range). 4h is not served by Yahoo
+// and is resampled from 60m bars. Ranges are the largest Yahoo allows for
+// each granularity (1m: 7 days, 5m/15m: 60 days, 60m: 730 days).
+const YAHOO_INTRADAY: Record<Interval, { interval: string; range: string }> = {
+  "1m": { interval: "1m", range: "7d" },
+  "5m": { interval: "5m", range: "60d" },
+  "15m": { interval: "15m", range: "60d" },
+  "1h": { interval: "60m", range: "730d" },
+  "4h": { interval: "60m", range: "730d" },
+  "1d": { interval: "1d", range: "2y" },
+};
 
 // Yahoo Finance public endpoints (keyless). Used for symbol search and as
 // a fallback candle source. NSE symbols end .NS, BSE symbols .BO.
 
 const UA = { "User-Agent": "Mozilla/5.0", Accept: "application/json" };
 
-export class YahooProvider implements MarketDataProvider, SymbolSearchProvider {
+export class YahooProvider
+  implements MarketDataProvider, SymbolSearchProvider, IntradayProvider
+{
   readonly id = "yahoo";
+
+  async getIntradayBars(
+    symbol: string,
+    exchange: "NSE" | "BSE",
+    interval: Interval,
+  ): Promise<IntradayResponse> {
+    const suffix = exchange === "NSE" ? ".NS" : ".BO";
+    // Index symbols (^NSEI, ^INDIAVIX, …) are global on Yahoo: no suffix.
+    const yahooSymbol = symbol.startsWith("^") ? symbol : symbol + suffix;
+    const q = YAHOO_INTRADAY[interval];
+    let res: Response;
+    try {
+      res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=${q.interval}&range=${q.range}&includePrePost=false`,
+        { headers: UA, signal: AbortSignal.timeout(20_000), cache: "no-store" },
+      );
+    } catch {
+      throw new ProviderError("Yahoo chart unreachable.", "unavailable");
+    }
+    if (res.status === 404) throw new ProviderError(`Symbol ${symbol} not found on Yahoo (${exchange}).`, "not_found");
+    if (res.status === 429) throw new ProviderError("Yahoo rate-limited.", "rate_limited");
+    if (!res.ok) throw new ProviderError(`Yahoo error ${res.status}`, "bad_response");
+    const body = (await res.json()) as YahooChartBody;
+    const fetchedAt = new Date();
+    // Parse at the served granularity, then resample if needed.
+    const parsed = parseYahooChart(body, interval === "4h" ? "1h" : interval, Math.floor(fetchedAt.getTime() / 1000));
+    if ("error" in parsed) throw new ProviderError(parsed.error, "not_found");
+    if (parsed.bars.length === 0) throw new ProviderError("Yahoo returned no usable bars.", "not_found");
+    let bars = parsed.bars;
+    let lastBarForming = parsed.lastBarForming;
+    if (interval === "4h") {
+      bars = resampleTo4h(bars);
+      const last = bars.at(-1)!;
+      lastBarForming = fetchedAt.getTime() / 1000 < last.time + 14_400 && parsed.lastBarForming;
+    }
+    return {
+      interval,
+      bars,
+      lastBarForming,
+      source: "yahoo",
+      fetchedAt: fetchedAt.toISOString(),
+      quote: parsed.quote,
+    };
+  }
 
   async searchSymbols(query: string): Promise<SymbolResult[]> {
     let res: Response;

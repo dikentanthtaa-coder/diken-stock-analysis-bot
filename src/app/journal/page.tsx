@@ -1,7 +1,9 @@
 export const metadata = { title: "Journal" };
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { PageLoader } from "../loader";
+import { evaluatePendingSignals, getLiveRecord } from "@/server/signal/postmortem";
 
 export default function JournalPage() {
   return (
@@ -23,7 +25,12 @@ const OUTCOME_LABEL: Record<string, string> = {
   ReviewPosition: "Review Position",
 };
 
+const dtFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
+
 async function JournalContent() {
+  await connection(); // grading reads live bars at request time
+  await evaluatePendingSignals().catch((e) => console.error("[journal] grading failed", e));
+  const record = await getLiveRecord({ take: 40 }).catch(() => null);
   const [closedTrades, analyses, backtests] = await Promise.all([
     db.paperTrade.findMany({
       where: { status: "closed" },
@@ -78,6 +85,66 @@ async function JournalContent() {
           </p>
           <p className="text-xs text-zinc-500">hypothetical net P/L (gross, no costs)</p>
         </div>
+      </section>
+
+      <section className="mt-8" id="signal-record">
+        <h2 className="font-medium text-zinc-900">Live Signals record — forward-tested</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Every BUY/SELL the engine emitted, graded afterwards on closed bars: did price reach target 1 before the stop
+          (stop first within a bar; expired after {record?.maxBars ?? 40} bars at the open R)? Nothing here is back-fitted.
+        </p>
+        {!record || record.totals.total === 0 ? (
+          <p className="mt-2 text-sm text-zinc-500">No signals recorded yet. Open Live Signals; each BUY/SELL is logged automatically.</p>
+        ) : (
+          <>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+              {[
+                ["Signals", `${record.totals.total}`],
+                ["Graded", `${record.totals.evaluated}`],
+                ["Target-1 before stop", record.totals.hitRate != null ? `${(record.totals.hitRate * 100).toFixed(0)}%` : "—"],
+                ["Avg result", record.totals.avgResultR != null ? `${record.totals.avgResultR > 0 ? "+" : ""}${record.totals.avgResultR}R` : "—"],
+              ].map(([k, v]) => (
+                <div key={k} className="rounded-lg border border-zinc-200 p-3">
+                  <p className="text-lg font-semibold tabular-nums text-zinc-900">{v}</p>
+                  <p className="text-[11px] uppercase tracking-wide text-zinc-400">{k}</p>
+                </div>
+              ))}
+            </div>
+            {record.rows.length > 0 && (
+              <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200">
+                <table className="rtable w-full text-sm">
+                  <thead className="bg-zinc-50 text-left text-xs text-zinc-500">
+                    <tr><th className="px-3 py-2">Timeframe</th><th className="px-3 py-2">Signal</th><th className="px-3 py-2">Total</th><th className="px-3 py-2">Target 1</th><th className="px-3 py-2">Stop</th><th className="px-3 py-2">Expired</th><th className="px-3 py-2">Hit rate</th><th className="px-3 py-2">Avg R</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {record.rows.map((r) => (
+                      <tr key={`${r.interval}-${r.signal}`}>
+                        <td data-label="Timeframe" data-primary="" className="px-3 py-2 font-medium">{r.interval}</td>
+                        <td data-label="Signal" className={`px-3 py-2 font-medium ${r.signal === "BUY" ? "text-emerald-700" : "text-red-700"}`}>{r.signal}</td>
+                        <td data-label="Total" className="px-3 py-2">{r.total}</td>
+                        <td data-label="Target 1" className="px-3 py-2">{r.target1}</td>
+                        <td data-label="Stop" className="px-3 py-2">{r.stop}</td>
+                        <td data-label="Expired" className="px-3 py-2">{r.expired}</td>
+                        <td data-label="Hit rate" className="px-3 py-2">{r.hitRate != null ? `${(r.hitRate * 100).toFixed(0)}%` : "—"}</td>
+                        <td data-label="Avg R" className="px-3 py-2">{r.avgResultR != null ? r.avgResultR.toFixed(2) : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="mt-3 space-y-1">
+              {record.recent.map((e) => (
+                <div key={e.id} className="flex flex-wrap items-center justify-between gap-x-3 rounded-md border border-zinc-200 px-3 py-1.5 text-xs">
+                  <span><b className={e.signal === "BUY" ? "text-emerald-700" : "text-red-700"}>{e.signal}</b> {e.symbol} {e.interval} · {dtFmt.format(new Date(e.barTime))} · entry {e.entry.toFixed(2)} stop {e.stop.toFixed(2)} T1 {e.target1.toFixed(2)} · conf {e.confidence}</span>
+                  <span className={e.outcome === "target1" ? "text-emerald-700" : e.outcome === "stop" ? "text-red-700" : "text-zinc-500"}>
+                    {e.outcome}{e.resultR != null ? ` (${e.resultR > 0 ? "+" : ""}${e.resultR}R)` : ""}{e.outcome === "pending" ? ` · ${e.barsChecked} bars` : ""}{e.mfeR != null ? ` · MFE ${e.mfeR}R / MAE ${e.maeR}R` : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="mt-8">

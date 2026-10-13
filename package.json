@@ -16,6 +16,7 @@
     "db:import-sqlite": "tsx tools/migrate-sqlite-to-postgres.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "^7.10.0",
     "lightweight-charts": "^5.2.1",

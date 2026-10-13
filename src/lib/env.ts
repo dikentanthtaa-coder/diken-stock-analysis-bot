@@ -15,6 +15,7 @@ const envSchema = z.object({
   AI_PROVIDER: z.string().optional().default(""),
   AI_API_KEY: z.string().optional().default(""),
   YOUTUBE_API_KEY: z.string().optional().default(""),
+  TWELVEDATA_API_KEY: z.string().optional().default(""),
 });
 
 export const env = envSchema.parse({
@@ -24,4 +25,5 @@ export const env = envSchema.parse({
   AI_PROVIDER: process.env.AI_PROVIDER,
   AI_API_KEY: process.env.AI_API_KEY,
   YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY,
+  TWELVEDATA_API_KEY: process.env.TWELVEDATA_API_KEY,
 });

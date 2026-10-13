@@ -23,6 +23,7 @@ model Stock {
   watchlistItems WatchlistItem[]
   analyses       Analysis[]
   paperTrades    PaperTrade[]
+  signalEvents   SignalEvent[]
 
   @@unique([symbol, exchange])
 }
@@ -239,6 +240,39 @@ model BacktestRun {
   error       String?
   createdAt   DateTime @default(now())
   completedAt DateTime?
+}
+
+// ---------- Live signal record (forward-tested accuracy) ----------
+
+// One row per BUY/SELL the Live Signals engine emitted, evaluated later
+// against the bars that followed: did price reach target 1 before the
+// stop? Used for the honest "live record" per timeframe.
+model SignalEvent {
+  id            String    @id @default(cuid())
+  stockId       String
+  interval      String // 1m | 5m | 15m | 1h | 4h | 1d
+  signal        String // BUY | SELL
+  confidence    Int
+  combinedScore Int
+  barTime       DateTime // last closed bar the signal was based on
+  entry         Float
+  stop          Float
+  target1       Float
+  target2       Float
+  dataStatus    String // live | delayed | closed | stale
+  // pending | target1 | stop | expired | invalid
+  outcome       String    @default("pending")
+  barsChecked   Int       @default(0)
+  mfeR          Float? // max favourable excursion in R
+  maeR          Float? // max adverse excursion in R
+  resultR       Float? // realised R at outcome
+  evaluatedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@index([outcome, createdAt])
+  @@index([stockId, interval, createdAt])
 }
 
 // ---------- App settings ----------

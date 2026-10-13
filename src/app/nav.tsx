@@ -10,6 +10,7 @@ type Item = { href: string; label: string; icon: keyof typeof ICONS; hint: strin
 const NAV: Item[] = [
   { href: "/", label: "Dashboard", icon: "home", hint: "Overview, charts & history" },
   { href: "/research", label: "Research", icon: "search", hint: "Analyze a stock" },
+  { href: "/signals", label: "Signals", icon: "bolt", hint: "Live BUY / SELL / HOLD" },
   { href: "/planner", label: "Planner", icon: "calc", hint: "Size a trade" },
   { href: "/learning", label: "Learning", icon: "play", hint: "Course transcripts" },
   { href: "/knowledge", label: "Knowledge", icon: "book", hint: "Concepts & rules" },
@@ -21,11 +22,12 @@ const NAV: Item[] = [
 ];
 
 // Bottom bar on phones: four primary pages + "More".
-const BOTTOM: Item[] = [NAV[0], NAV[1], NAV[2], NAV[6]];
+const BOTTOM: Item[] = [NAV[0], NAV[2], NAV[1], NAV[7]];
 
 const ICONS = {
   home: "M3 11.5 12 4l9 7.5M5 10v10h14V10",
   search: "M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Zm10.5 3-5.2-5.2",
+  bolt: "M13 2 4.5 13.5H11l-1 8.5L19.5 10.5H13l1-8.5Z",
   calc: "M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm2 4h8M8 12h3m5 0h0M8 16h3m5 0h0",
   play: "M5 4.5v15l14-7.5-14-7.5Z",
   book: "M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Zm0 16a2 2 0 0 1 2-2h13",
@@ -79,7 +81,7 @@ export function TopNav() {
             <div className="flex items-center gap-2">
               <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 md:flex">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                EOD data · research only
+                Research only · no orders placed
               </span>
               <button
                 type="button"
@@ -145,7 +147,7 @@ export function TopNav() {
                 );
               })}
             </ul>
-            <p className="mt-4 text-center text-[11px] text-zinc-400">End-of-day data · research only · no orders placed</p>
+            <p className="mt-4 text-center text-[11px] text-zinc-400">Research only · no orders placed · live data status always shown</p>
           </div>
         </div>
       )}

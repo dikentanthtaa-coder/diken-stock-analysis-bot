@@ -44,7 +44,7 @@ export async function pruneOldActivity(): Promise<number> {
 /* ---------- activity feed (merged, de-duplicated by source) ---------- */
 
 export type FeedKind =
-  | "search" | "analysis" | "watchlist" | "paper" | "backtest" | "planner" | "knowledge" | "learning";
+  | "search" | "analysis" | "watchlist" | "paper" | "backtest" | "planner" | "knowledge" | "learning" | "signal";
 
 export interface FeedItem {
   id: string;
@@ -66,6 +66,7 @@ export const KIND_LABEL: Record<FeedKind, string> = {
   planner: "Planner",
   knowledge: "Knowledge",
   learning: "Learning",
+  signal: "Signal",
 };
 
 const OUTCOME_SHORT: Record<string, string> = {
@@ -86,7 +87,7 @@ export async function getActivityFeed(kind?: FeedKind): Promise<FeedItem[]> {
   await pruneOldActivity();
   const since = windowStart();
   const want = (k: FeedKind) => !kind || kind === k;
-  const eventKinds: FeedKind[] = ["search", "watchlist", "planner", "knowledge"];
+  const eventKinds: FeedKind[] = ["search", "watchlist", "planner", "knowledge", "signal"];
   const wantEvents = !kind || eventKinds.includes(kind);
 
   const [events, analyses, trades, runs, videos] = await Promise.all([
@@ -245,7 +246,7 @@ export async function getDashboardData() {
       db.transcript.count(),
     ]),
     db.activityEvent.findMany({
-      where: { createdAt: { gte: since }, kind: { in: ["search", "watchlist", "planner", "knowledge"] } },
+      where: { createdAt: { gte: since }, kind: { in: ["search", "watchlist", "planner", "knowledge", "signal"] } },
       select: { kind: true, createdAt: true },
     }),
     db.analysis.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),

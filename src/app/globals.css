@@ -280,3 +280,12 @@ html {
     padding-right: 0.75rem;
   }
 }
+
+/* Live-data indicator on the Signals page */
+.live-dot {
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: { default: `${APP_NAME} · ${APP_TAGLINE}`, template: `%s · ${APP_NAME}` },
   description:
-    "Personal swing-trading research for NSE/BSE equities: end-of-day analysis, knowledge base from trading courses, planner, backtests and paper trading.",
+    "Personal trading research for NSE/BSE equities: live multi-timeframe signals, end-of-day swing analysis, knowledge base from trading courses, planner, backtests and paper trading.",
   applicationName: APP_NAME,
   other: { "color-scheme": "only light" },
 };
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <LogoMark size={16} /> {APP_NAME}
             </span>
             <span>
-              Personal research tool · end-of-day data only · not investment
+              Personal research tool · live data status always shown · not investment
               advice · no orders are placed anywhere
             </span>
           </div>
