@@ -23,7 +23,7 @@ export function TopNav() {
     <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between py-2.5">
-          <Link href="/" aria-label="DKN Alpha home">
+          <Link href="/" aria-label="Candlewise home">
             <Brand withTagline />
           </Link>
           <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 md:flex">

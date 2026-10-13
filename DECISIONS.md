@@ -127,3 +127,16 @@
   using the current time (IST day buckets), per Next docs.
 - `/research?symbol=X&exchange=NSE` auto-runs an analysis (used by
   dashboard links to re-run).
+
+## Phase 12 (2026-10-13) — Candlewise brand, 7-day activity retention
+
+- **Name: Candlewise** (unique, no personal initials). `src/app/brand.tsx`
+  holds `APP_NAME`/`APP_TAGLINE`, the SVG logo mark and wordmark; the
+  favicon is `src/app/icon.svg`. Page titles use the metadata template.
+- **Activity retention = 7 days.** `pruneOldActivity()` deletes
+  `ActivityEvent` rows older than the window on every dashboard/activity
+  load. Canonical tables (analyses, paper trades, backtests, videos) are
+  never pruned; they simply fall out of the activity views after 7 days.
+  The dashboard activity chart and "searches" tile use the same window.
+- **Activity page pagination:** 25 per page, `?page=N&kind=…`; the whole
+  week is fetched (bounded by the window) and sliced in memory.

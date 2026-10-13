@@ -23,6 +23,24 @@ function lastNDays(n: number): { key: string; label: string; date: Date }[] {
   return out;
 }
 
+/* ---------- retention ---------- */
+
+/** Activity is kept for one week. Older ActivityEvent rows are deleted
+ *  automatically; canonical records (analyses, trades, backtests, videos)
+ *  are never deleted here — they just drop out of the activity views. */
+export const ACTIVITY_WINDOW_DAYS = 7;
+export const windowStart = () => new Date(Date.now() - ACTIVITY_WINDOW_DAYS * 86_400_000);
+
+export async function pruneOldActivity(): Promise<number> {
+  try {
+    const res = await db.activityEvent.deleteMany({ where: { createdAt: { lt: windowStart() } } });
+    return res.count;
+  } catch (error) {
+    console.error("[activity] prune failed", error);
+    return 0;
+  }
+}
+
 /* ---------- activity feed (merged, de-duplicated by source) ---------- */
 
 export type FeedKind =
@@ -63,29 +81,32 @@ const OUTCOME_SHORT: Record<string, string> = {
  * canonical tables (full history). Searches, watchlist, planner and
  * knowledge edits come from ActivityEvent. No source is counted twice.
  */
-export async function getActivityFeed(limit = 50, kind?: FeedKind): Promise<FeedItem[]> {
+export async function getActivityFeed(kind?: FeedKind): Promise<FeedItem[]> {
   await connection();
+  await pruneOldActivity();
+  const since = windowStart();
   const want = (k: FeedKind) => !kind || kind === k;
-  const take = limit;
+  const eventKinds: FeedKind[] = ["search", "watchlist", "planner", "knowledge"];
+  const wantEvents = !kind || eventKinds.includes(kind);
 
   const [events, analyses, trades, runs, videos] = await Promise.all([
-    db.activityEvent.findMany({
-      where: {
-        kind: kind ? kind : { in: ["search", "watchlist", "planner", "knowledge"] },
-        ...(kind && ["analysis", "paper", "backtest", "learning"].includes(kind) ? { id: "__none__" } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      take,
-    }),
+    wantEvents
+      ? db.activityEvent.findMany({
+          where: { kind: kind ?? { in: eventKinds }, createdAt: { gte: since } },
+          orderBy: { createdAt: "desc" },
+        })
+      : [],
     want("analysis")
-      ? db.analysis.findMany({ orderBy: { createdAt: "desc" }, take, include: { stock: true } })
+      ? db.analysis.findMany({ where: { createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, include: { stock: true } })
       : [],
     want("paper")
-      ? db.paperTrade.findMany({ orderBy: { updatedAt: "desc" }, take, include: { stock: true } })
+      ? db.paperTrade.findMany({ where: { updatedAt: { gte: since } }, orderBy: { updatedAt: "desc" }, include: { stock: true } })
       : [],
-    want("backtest") ? db.backtestRun.findMany({ orderBy: { createdAt: "desc" }, take }) : [],
+    want("backtest")
+      ? db.backtestRun.findMany({ where: { createdAt: { gte: since } }, orderBy: { createdAt: "desc" } })
+      : [],
     want("learning")
-      ? db.video.findMany({ where: { processedAt: { not: null } }, orderBy: { processedAt: "desc" }, take })
+      ? db.video.findMany({ where: { processedAt: { gte: since } }, orderBy: { processedAt: "desc" } })
       : [],
   ]);
 
@@ -154,7 +175,17 @@ export async function getActivityFeed(limit = 50, kind?: FeedKind): Promise<Feed
     });
   }
   items.sort((a, b) => b.at.getTime() - a.at.getTime());
-  return items.slice(0, limit);
+  return items.filter((i) => i.at >= since);
+}
+
+export const ACTIVITY_PAGE_SIZE = 25;
+
+export async function getActivityPage(page: number, kind?: FeedKind) {
+  const all = await getActivityFeed(kind);
+  const pages = Math.max(1, Math.ceil(all.length / ACTIVITY_PAGE_SIZE));
+  const current = Math.min(Math.max(1, page), pages);
+  const start = (current - 1) * ACTIVITY_PAGE_SIZE;
+  return { items: all.slice(start, start + ACTIVITY_PAGE_SIZE), total: all.length, page: current, pages };
 }
 
 function safeJson<T>(s: string | null | undefined): T | null {
@@ -179,8 +210,8 @@ export const ACTIVITY_SERIES = ["Searches", "Analyses", "Backtests", "Paper trad
 export async function getDashboardData() {
   // Dashboard is per-request (uses the current time for day buckets).
   await connection();
-  const days = lastNDays(30);
-  const since = new Date(Date.now() - 30 * 86_400_000);
+  const days = lastNDays(ACTIVITY_WINDOW_DAYS);
+  const since = windowStart();
 
   const [
     counts,
@@ -201,7 +232,7 @@ export async function getDashboardData() {
   ] = await Promise.all([
     Promise.all([
       db.analysis.count(),
-      db.activityEvent.count({ where: { kind: "search" } }),
+      db.activityEvent.count({ where: { kind: "search", createdAt: { gte: since } } }),
       db.backtestRun.count(),
       db.paperTrade.count(),
       db.watchlistItem.count(),
@@ -227,7 +258,7 @@ export async function getDashboardData() {
     db.concept.findMany({ select: { createdAt: true } }),
     db.strategyRule.findMany({ select: { createdAt: true } }),
     db.analysis.groupBy({ by: ["outcome"], _count: { _all: true } }),
-    db.activityEvent.findMany({ where: { kind: "search" }, orderBy: { createdAt: "desc" }, take: 200 }),
+    db.activityEvent.findMany({ where: { kind: "search", createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, take: 200 }),
     db.analysis.findMany({ orderBy: { createdAt: "desc" }, take: 10, include: { stock: true } }),
     db.analysis.findMany({
       where: { outcome: { in: ["PotentialBuySetup", "WatchlistWait"] } },
@@ -241,7 +272,7 @@ export async function getDashboardData() {
       take: 10,
     }),
     db.dataCoverage.findMany(),
-    getActivityFeed(20),
+    getActivityFeed().then((f) => f.slice(0, 15)),
   ]);
 
   const [
@@ -249,7 +280,7 @@ export async function getDashboardData() {
     videosDone, videosTotal, conceptCount, ruleCount, candleCount, stockCount, transcriptCount,
   ] = counts;
 
-  // --- activity per day (30d) ---
+  // --- activity per day (last week) ---
   const idx = new Map(days.map((d, i) => [d.key, i]));
   const activity: Bucket[] = days.map((d) => ({ key: d.key, label: d.label, values: [0, 0, 0, 0, 0, 0] }));
   const bump = (date: Date | null | undefined, s: number) => {

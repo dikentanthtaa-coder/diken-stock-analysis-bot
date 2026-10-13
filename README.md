@@ -1,4 +1,4 @@
-# DKN Alpha — swing research for NSE & BSE
+# Candlewise — swing research for NSE & BSE
 
 Personal swing-trading **research and decision-support** web app for Indian
 (NSE/BSE) equities. Local, single-user, ₹0/month. **Not a broker, not an

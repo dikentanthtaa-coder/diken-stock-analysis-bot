@@ -1,4 +1,4 @@
-export const APP_NAME = "DKN Alpha";
+export const APP_NAME = "Candlewise";
 export const APP_TAGLINE = "Swing research for NSE & BSE";
 
 /** Gradient tile with three rising candlesticks and a spark line. */
@@ -12,12 +12,12 @@ export function LogoMark({ size = 32, className = "" }: { size?: number; classNa
       className={className}
     >
       <defs>
-        <linearGradient id="dknGrad" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="cwGrad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#4f46e5" />
           <stop offset="100%" stopColor="#7c3aed" />
         </linearGradient>
       </defs>
-      <rect width="32" height="32" rx="8" fill="url(#dknGrad)" />
+      <rect width="32" height="32" rx="8" fill="url(#cwGrad)" />
       {/* candles */}
       <g stroke="#fff" strokeWidth="1.4" strokeLinecap="round" opacity="0.55">
         <line x1="9" y1="13" x2="9" y2="25" />
@@ -47,7 +47,7 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
   const cls = size === "lg" ? "text-2xl" : "text-[16px]";
   return (
     <span className={`${cls} font-semibold tracking-tight text-zinc-900`}>
-      DKN<span className="ml-1 font-medium text-indigo-600">Alpha</span>
+      Candle<span className="font-medium text-indigo-600">wise</span>
     </span>
   );
 }

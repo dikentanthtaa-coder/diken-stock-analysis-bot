@@ -63,11 +63,11 @@ async function DashboardContent() {
   const d = await getDashboardData();
   const c = d.counts;
   const activitySeries = ACTIVITY_SERIES.map((name, i) => ({ name, color: i === 5 ? "#a1a1aa" : SERIES_COLORS[i] }));
-  const totalActivity30d = d.activity.reduce((s, b) => s + b.values.reduce((a, v) => a + v, 0), 0);
+  const totalActivityWeek = d.activity.reduce((s, b) => s + b.values.reduce((a, v) => a + v, 0), 0);
 
   const tiles: [string, string, string, string][] = [
     [`${c.analysisCount}`, "analyses run", "/research", "bg-indigo-500"],
-    [`${c.searchCount}`, "searches", "/activity?kind=search", "bg-sky-500"],
+    [`${c.searchCount}`, "searches this week", "/activity?kind=search", "bg-sky-500"],
     [`${c.backtestCount}`, "backtests", "/backtest", "bg-orange-500"],
     [`${c.paperCount}`, "paper trades", "/paper", "bg-amber-500"],
     [`${c.watchCount}`, "watchlist stocks", "/", "bg-teal-500"],
@@ -87,8 +87,8 @@ async function DashboardContent() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-semibold leading-none">{totalActivity30d}</p>
-            <p className="mt-1 text-xs text-indigo-100">actions in the last 30 days</p>
+            <p className="text-3xl font-semibold leading-none">{totalActivityWeek}</p>
+            <p className="mt-1 text-xs text-indigo-100">actions in the last 7 days</p>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -117,7 +117,7 @@ async function DashboardContent() {
 
       {/* Activity over time */}
       <div className="mt-6">
-        <Card title="Activity · last 30 days" sub="Searches, analyses, backtests, paper trades, transcript processing and other actions per day (IST).">
+        <Card title="Activity · last 7 days" sub="Searches, analyses, backtests, paper trades, transcript processing and other actions per day (IST).">
           <div className="mt-3">
             <StackedColumns data={d.activity} series={activitySeries} height={200} />
           </div>
@@ -255,7 +255,7 @@ async function DashboardContent() {
 
       {/* Search history + recently analyzed */}
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <Card title="Search history" sub="What you looked up · click to run again." action={<Link href="/activity?kind=search" className="text-xs text-indigo-600 hover:underline">All →</Link>}>
+        <Card title="Search history" sub="Last 7 days · click to run again." action={<Link href="/activity?kind=search" className="text-xs text-indigo-600 hover:underline">All →</Link>}>
           {d.searches.length === 0 ? (
             <Empty>No searches recorded yet. Searches are logged from now on when you pick a stock or search the knowledge base.</Empty>
           ) : (
@@ -347,7 +347,7 @@ async function DashboardContent() {
 
       {/* Activity feed */}
       <div className="mt-4">
-        <Card title="Activity history" sub="Most recent actions across the app." action={<Link href="/activity" className="text-xs text-indigo-600 hover:underline">View all →</Link>}>
+        <Card title="Activity history" sub="Most recent actions across the app · activity is kept for 7 days." action={<Link href="/activity" className="text-xs text-indigo-600 hover:underline">View all →</Link>}>
           <ActivityList items={d.feed} />
         </Card>
       </div>
