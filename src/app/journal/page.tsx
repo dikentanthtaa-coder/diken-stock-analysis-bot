@@ -1,3 +1,4 @@
+export const metadata = { title: "Journal" };
 import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { PageLoader } from "../loader";

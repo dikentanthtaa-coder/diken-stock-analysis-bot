@@ -1,3 +1,4 @@
+export const metadata = { title: "Research" };
 import { Suspense } from "react";
 import { ResearchClient } from "./ui";
 

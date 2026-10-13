@@ -1,3 +1,4 @@
+export const metadata = { title: "Backtest" };
 import { BacktestClient } from "./ui";
 
 export default function BacktestPage() {

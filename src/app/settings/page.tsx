@@ -1,3 +1,4 @@
+export const metadata = { title: "Settings" };
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { db } from "@/lib/db";

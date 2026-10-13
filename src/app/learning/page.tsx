@@ -1,3 +1,4 @@
+export const metadata = { title: "Learning" };
 import { db } from "@/lib/db";
 import { REQUIRED_PLAYLISTS, CHANNEL_URL } from "@/server/youtube/config";
 import { Suspense } from "react";

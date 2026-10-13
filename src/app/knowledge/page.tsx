@@ -1,3 +1,4 @@
+export const metadata = { title: "Knowledge" };
 import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { KnowledgeClient } from "./ui";

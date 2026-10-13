@@ -1,3 +1,4 @@
+export const metadata = { title: "Planner" };
 import { PlannerClient } from "./ui";
 
 export default function PlannerPage() {

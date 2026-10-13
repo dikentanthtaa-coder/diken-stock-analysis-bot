@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Brand } from "./brand";
 
 const NAV = [
   { href: "/", label: "Dashboard" },
@@ -22,13 +23,8 @@ export function TopNav() {
     <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between py-2.5">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 text-sm font-bold text-white shadow-sm">
-              D
-            </span>
-            <span className="text-[15px] font-semibold tracking-tight text-zinc-900">
-              Dkn Stock Research
-            </span>
+          <Link href="/" aria-label="DKN Alpha home">
+            <Brand withTagline />
           </Link>
           <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 md:flex">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />

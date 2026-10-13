@@ -1,3 +1,4 @@
+export const metadata = { title: "Activity" };
 import { Suspense } from "react";
 import Link from "next/link";
 import { PageLoader } from "../loader";

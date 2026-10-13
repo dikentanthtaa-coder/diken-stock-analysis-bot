@@ -1,3 +1,4 @@
+export const metadata = { title: "Paper trading" };
 import { PaperClient } from "./ui";
 
 export default function PaperPage() {
