@@ -1,0 +1,250 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Market data ----------
+
+model Stock {
+  id        String   @id @default(cuid())
+  symbol    String // e.g. "RELIANCE"
+  exchange  String // "NSE" | "BSE"
+  name      String
+  isin      String?
+  sector    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  candles        Candle[]
+  watchlistItems WatchlistItem[]
+  analyses       Analysis[]
+  paperTrades    PaperTrade[]
+
+  @@unique([symbol, exchange])
+}
+
+// Daily OHLCV cache. `source` + `fetchedAt` give data-freshness labels.
+model Candle {
+  id       String   @id @default(cuid())
+  stockId  String
+  date     DateTime // trading day (UTC midnight)
+  open     Float
+  high     Float
+  low      Float
+  close    Float
+  volume   Float
+  adjusted Boolean  @default(false)
+  source   String // provider id, e.g. "yahoo", "tejhq"
+  fetchedAt DateTime @default(now())
+
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([stockId, date])
+  @@index([stockId, date])
+}
+
+// Per-stock metadata about what data we hold and where it came from.
+model DataCoverage {
+  id         String    @id @default(cuid())
+  stockId    String    @unique
+  provider   String
+  firstDate  DateTime?
+  lastDate   DateTime?
+  candleCount Int      @default(0)
+  lastSync   DateTime?
+  lastError  String?
+}
+
+// ---------- YouTube learning ----------
+
+model Playlist {
+  id          String   @id @default(cuid())
+  youtubeId   String   @unique
+  title       String
+  channel     String
+  url         String
+  description String?
+  videoCount  Int      @default(0)
+  lastSynced  DateTime?
+  createdAt   DateTime @default(now())
+
+  videos Video[]
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  playlistId  String
+  youtubeId   String
+  title       String
+  url         String
+  position    Int      @default(0)
+  durationSec Int?
+  publishedAt DateTime?
+  // Pending | Processing | Completed | TranscriptUnavailable | Failed
+  status      String   @default("Pending")
+  statusNote  String? // error details / retry info
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  playlist   Playlist    @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  transcript Transcript?
+  concepts   Concept[]
+  rules      StrategyRule[]
+
+  @@unique([playlistId, youtubeId])
+  @@index([status])
+}
+
+model Transcript {
+  id        String   @id @default(cuid())
+  videoId   String   @unique
+  language  String   @default("en")
+  // "auto" (fetched caption track) | "manual" (user-imported authorized text)
+  origin    String
+  content   String // full text; may include [mm:ss] markers
+  createdAt DateTime @default(now())
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Knowledge base ----------
+
+model Concept {
+  id         String   @id @default(cuid())
+  name       String
+  definition String
+  // "taught" (explicitly in source) | "interpreted" (AI/heuristic inference)
+  provenance String   @default("taught")
+  videoId    String?
+  timestamp  String? // e.g. "12:34"
+  tags       String? // comma-separated
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  video Video? @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  @@index([name])
+}
+
+model StrategyRule {
+  id           String   @id @default(cuid())
+  title        String
+  ruleText     String // original rule as taught
+  conditions   String // JSON array of machine-checkable conditions (may be empty)
+  provenance   String   @default("taught") // "taught" | "interpreted"
+  videoId      String?
+  timestamp    String?
+  // "unvalidated" | "backtested" | "conflicting" | "ambiguous"
+  validation   String   @default("unvalidated")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  video     Video?         @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  conflictsA RuleConflict[] @relation("ruleA")
+  conflictsB RuleConflict[] @relation("ruleB")
+
+  @@index([title])
+}
+
+model RuleConflict {
+  id          String   @id @default(cuid())
+  ruleAId     String
+  ruleBId     String
+  description String
+  resolved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  ruleA StrategyRule @relation("ruleA", fields: [ruleAId], references: [id], onDelete: Cascade)
+  ruleB StrategyRule @relation("ruleB", fields: [ruleBId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Research workflow ----------
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  items WatchlistItem[]
+}
+
+model WatchlistItem {
+  id          String   @id @default(cuid())
+  watchlistId String
+  stockId     String
+  note        String?
+  addedAt     DateTime @default(now())
+
+  watchlist Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  stock     Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([watchlistId, stockId])
+}
+
+model Analysis {
+  id        String   @id @default(cuid())
+  stockId   String
+  // PotentialBuySetup | WatchlistWait | NoTrade | InsufficientData | ReviewPosition
+  outcome   String
+  asOfDate  DateTime // last candle date the analysis saw
+  // JSON: trend, structure, levels, scenarios, rule matches, evidence
+  report    String
+  createdAt DateTime @default(now())
+
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@index([stockId, createdAt])
+}
+
+// ---------- Paper trading & journal ----------
+
+model PaperTrade {
+  id          String    @id @default(cuid())
+  stockId     String
+  direction   String    @default("long") // "long" | "short"
+  status      String    @default("planned") // planned | open | closed | cancelled
+  entryPrice  Float?
+  entryDate   DateTime?
+  stopLoss    Float?
+  target1     Float?
+  target2     Float?
+  quantity    Int?
+  exitPrice   Float?
+  exitDate    DateTime?
+  exitReason  String? // stop | target1 | target2 | manual | other
+  thesis      String? // original rationale
+  review      String? // post-trade review vs thesis
+  analysisId  String? // link back to the analysis that prompted it
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model BacktestRun {
+  id          String   @id @default(cuid())
+  name        String
+  strategyId  String? // StrategyRule id, if rule-driven
+  paramsJson  String // symbols, period splits, costs, slippage
+  resultsJson String? // metrics + trade list
+  status      String   @default("pending") // pending | running | completed | failed
+  error       String?
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+}
+
+// ---------- App settings ----------
+
+model Setting {
+  key       String   @id
+  value     String // JSON-encoded
+  updatedAt DateTime @updatedAt
+}

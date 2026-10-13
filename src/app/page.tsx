@@ -1,69 +1,196 @@
-import Image from "next/image";
+import { Suspense } from "react";
+import Link from "next/link";
+import { db } from "@/lib/db";
 
-export default function Home() {
+export default function DashboardPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-5xl px-4 py-8 text-sm text-zinc-500">
+          Loading dashboard…
+        </main>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+const OUTCOME_SHORT: Record<string, string> = {
+  PotentialBuySetup: "Buy setup?",
+  WatchlistWait: "Wait",
+  NoTrade: "No trade",
+  InsufficientData: "No data",
+  ReviewPosition: "Review",
+};
+
+async function DashboardContent() {
+  const [recentAnalyses, setups, watchItems, counts] = await Promise.all([
+    db.analysis.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      include: { stock: true },
+    }),
+    db.analysis.findMany({
+      where: { outcome: { in: ["PotentialBuySetup", "WatchlistWait"] } },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      include: { stock: true },
+    }),
+    db.watchlistItem.findMany({
+      include: {
+        stock: { include: { candles: { orderBy: { date: "desc" }, take: 2 } } },
+      },
+      orderBy: { addedAt: "desc" },
+      take: 10,
+    }),
+    Promise.all([
+      db.video.count({ where: { status: "Completed" } }),
+      db.video.count(),
+      db.concept.count(),
+      db.strategyRule.count(),
+      db.paperTrade.count(),
+    ]),
+  ]);
+  const [videosDone, videosTotal, conceptCount, ruleCount, paperCount] = counts;
+
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-8">
+      <div className="rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-6 text-white shadow-md sm:px-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <p className="mt-1 text-sm text-indigo-100">
+          Research overview · all market data is end-of-day, never real-time.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href="/research"
+            className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm hover:bg-indigo-50"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Analyze a stock →
+          </Link>
+          <Link
+            href="/planner"
+            className="rounded-lg border border-white/50 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/20"
           >
-            Documentation
-          </a>
+            Plan a trade
+          </Link>
         </div>
-      </main>
-    </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {[
+          [`${videosDone}/${videosTotal}`, "transcripts processed", "/learning", "bg-indigo-500"],
+          [`${conceptCount}`, "concept entries", "/knowledge", "bg-emerald-500"],
+          [`${ruleCount}`, "strategy rules", "/knowledge", "bg-amber-500"],
+          [`${paperCount}`, "paper trades", "/paper", "bg-sky-500"],
+        ].map(([v, label, href, bar], i) => (
+          <Link
+            key={i}
+            href={href as string}
+            className="group relative overflow-hidden rounded-lg border border-zinc-200 p-4 transition-shadow hover:shadow-md"
+          >
+            <span className={`absolute inset-x-0 top-0 h-1 ${bar}`} />
+            <p className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">
+              {v}
+            </p>
+            <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-400">
+              {label}
+            </p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="mt-8 grid gap-4 md:grid-cols-2 md:gap-6">
+        <section className="rounded-lg border border-zinc-200 p-4">
+          <h2 className="font-medium text-zinc-900">Watchlist</h2>
+          {watchItems.length === 0 ? (
+            <p className="mt-2 text-sm text-zinc-500">
+              Empty. Add stocks from the{" "}
+              <Link href="/research" className="underline">
+                Research
+              </Link>{" "}
+              page.
+            </p>
+          ) : (
+            <table className="mt-2 w-full text-sm">
+              <tbody className="divide-y divide-zinc-100">
+                {watchItems.map((i) => {
+                  const [last, prev] = i.stock.candles;
+                  const chg =
+                    last && prev
+                      ? ((last.close - prev.close) / prev.close) * 100
+                      : null;
+                  return (
+                    <tr key={i.id}>
+                      <td className="py-2 font-medium">{i.stock.symbol}</td>
+                      <td className="py-2 text-zinc-500">{i.stock.exchange}</td>
+                      <td className="py-2 text-right">
+                        {last ? `₹${last.close.toFixed(2)}` : "—"}
+                      </td>
+                      <td
+                        className={`py-2 text-right ${
+                          chg == null
+                            ? "text-zinc-400"
+                            : chg >= 0
+                              ? "text-emerald-600"
+                              : "text-red-600"
+                        }`}
+                      >
+                        {chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—"}
+                      </td>
+                      <td className="py-2 text-right text-xs text-zinc-400">
+                        {last ? last.date.toISOString().slice(0, 10) : ""}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </section>
+
+        <section className="rounded-lg border border-zinc-200 p-4">
+          <h2 className="font-medium text-zinc-900">Setups needing review</h2>
+          {setups.length === 0 ? (
+            <p className="mt-2 text-sm text-zinc-500">
+              None yet. Run analyses from the Research page.
+            </p>
+          ) : (
+            <ul className="mt-2 space-y-2 text-sm">
+              {setups.map((a) => (
+                <li key={a.id} className="rounded-md border border-zinc-200 p-3">
+                  <span className="font-medium">{a.stock.symbol}</span>
+                  <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
+                    {OUTCOME_SHORT[a.outcome]}
+                  </span>
+                  <span className="ml-2 text-xs text-zinc-400">
+                    as of {a.asOfDate.toISOString().slice(0, 10)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      <section className="mt-8">
+        <h2 className="font-medium text-zinc-900">Recently analyzed</h2>
+        {recentAnalyses.length === 0 ? (
+          <p className="mt-2 text-sm text-zinc-500">No analyses yet.</p>
+        ) : (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {recentAnalyses.map((a) => (
+              <span
+                key={a.id}
+                className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600"
+              >
+                {a.stock.symbol} · {OUTCOME_SHORT[a.outcome]} ·{" "}
+                {a.createdAt.toISOString().slice(0, 10)}
+              </span>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }

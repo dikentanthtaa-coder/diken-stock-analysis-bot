@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Prisma
+prisma/dev.db*
+/src/generated/
+app.log
+
+# yt-dlp binary (download: see README)
+tools/yt-dlp
