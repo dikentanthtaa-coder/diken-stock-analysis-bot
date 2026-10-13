@@ -1,17 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 40 40">
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="t" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#111827"/><stop offset="100%" stop-color="#1e1b4b"/></linearGradient>
-    <linearGradient id="f" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#fbbf24" stop-opacity="0"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0.35"/></linearGradient>
+    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0b1220"/><stop offset="100%" stop-color="#1a1440"/></linearGradient>
+    <linearGradient id="green" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#6ee7b7"/></linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.55" r="0.55"><stop offset="0%" stop-color="#22d3ee" stop-opacity="0.35"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
   </defs>
-  <rect width="40" height="40" rx="10" fill="url(#t)"/>
-  <ellipse cx="22" cy="30" rx="14" ry="6" fill="url(#g)"/>
-  <g stroke="#fbbf24" stroke-width="1.6" stroke-linecap="round" opacity="0.7">
-    <line x1="11" y1="18" x2="11" y2="31"/><line x1="20" y1="13" x2="20" y2="27"/><line x1="29" y1="8" x2="29" y2="22"/>
-  </g>
-  <g fill="url(#f)">
-    <rect x="8.5" y="21" width="5" height="8" rx="1.2"/><rect x="17.5" y="16" width="5" height="8" rx="1.2"/><rect x="26.5" y="11" width="5" height="8" rx="1.2"/>
-  </g>
-  <path d="M8 30 L15 24 L20 26.5 L30 14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M25.5 13.2 L30.8 13.2 L30.8 18.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 2 L58 17 L58 47 L32 62 L6 47 L6 17 Z" fill="url(#tile)"/>
+  <path d="M32 2 L58 17 L58 47 L32 62 L6 47 L6 17 Z" fill="url(#glow)"/>
+  <path d="M32 2 L58 17 L58 47 L32 62 L6 47 L6 17 Z" fill="none" stroke="url(#neon)" stroke-width="2.4" stroke-linejoin="round"/>
+  <line x1="32" y1="9" x2="32" y2="15" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="32" cy="8" r="4" fill="#6ee7b7" opacity="0.25"/><circle cx="32" cy="8" r="2.4" fill="#6ee7b7"/>
+  <rect x="12.5" y="25" width="4" height="12" rx="2" fill="url(#neon)"/><rect x="47.5" y="25" width="4" height="12" rx="2" fill="url(#neon)"/>
+  <rect x="17" y="15" width="30" height="32" rx="8" fill="#0f172a" stroke="url(#neon)" stroke-width="2"/>
+  <rect x="20.5" y="19" width="23" height="17" rx="4" fill="#020617"/>
+  <line x1="24.5" y1="23" x2="24.5" y2="33" stroke="#f87171" stroke-width="1.1" stroke-linecap="round"/>
+  <rect x="23" y="25.5" width="3" height="5.5" rx="0.7" fill="#f87171"/>
+  <g stroke="#6ee7b7" stroke-width="1.1" stroke-linecap="round"><line x1="30" y1="21.5" x2="30" y2="32"/><line x1="35.5" y1="21" x2="35.5" y2="29.5"/><line x1="41" y1="20.5" x2="41" y2="27"/></g>
+  <g fill="url(#green)"><rect x="28.5" y="25" width="3" height="5" rx="0.7"/><rect x="34" y="23" width="3" height="4.6" rx="0.7"/><rect x="39.5" y="21.5" width="3" height="4" rx="0.7"/></g>
+  <path d="M22.5 33 L28.5 30 L34 28 L39.5 25 L42.5 22.5" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="26" y1="40.5" x2="38" y2="40.5" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="29" y1="44" x2="35" y2="44" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round"/>
 </svg>

@@ -130,7 +130,7 @@
 
 ## Phase 12 (2026-10-13) — Candlewise brand, 7-day activity retention
 
-- **Name: TradeForge** (replaced DKN Alpha → Candlewise; user wanted more "vibe"). Dark navy tile, amber/orange "forge-fire" candles, white breakout arrow. `src/app/brand.tsx`
+- **Name: TradeForge** (replaced DKN Alpha → Candlewise; user wanted more "vibe"). Logo is an original "trading bot" mark (robot head in a neon cyan→violet hexagon, visor shows a rising candlestick chart) — drawn in-house, not taken from image search, to avoid using someone else's trademarked artwork. `src/app/brand.tsx`
   holds `APP_NAME`/`APP_TAGLINE`, the SVG logo mark and wordmark; the
   favicon is `src/app/icon.svg`. Page titles use the metadata template.
 - **Activity retention = 7 days.** `pruneOldActivity()` deletes
