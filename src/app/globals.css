@@ -102,3 +102,86 @@ button:active {
 main {
   animation: fade-up 0.25s ease-out;
 }
+
+/* ---- Loaders (src/app/loader.tsx) ---- */
+@keyframes loader-candle-grow {
+  0%, 100% { transform: scaleY(0.6); opacity: 0.45; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+@keyframes loader-trend-draw {
+  0% { stroke-dashoffset: 80; opacity: 0; }
+  20% { opacity: 1; }
+  70% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes loader-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes loader-bar {
+  0% { transform: translateX(-100%); }
+  60% { transform: translateX(60%); }
+  100% { transform: translateX(260%); }
+}
+@keyframes loader-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(99 102 241 / 0.45); }
+  70% { box-shadow: 0 0 0 6px rgb(99 102 241 / 0); }
+}
+@keyframes loader-ellipsis {
+  0% { content: ""; }
+  25% { content: "."; }
+  50% { content: ".."; }
+  75% { content: "..."; }
+}
+@keyframes loader-card-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.loader-candle {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: loader-candle-grow 1.3s ease-in-out infinite;
+}
+.loader-trend {
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation: loader-trend-draw 2.6s ease-in-out infinite;
+}
+.loader-shimmer {
+  background: linear-gradient(90deg, #f1f1f4 25%, #e6e7eb 50%, #f1f1f4 75%);
+  background-size: 200% 100%;
+  animation: loader-shimmer 1.6s linear infinite;
+}
+.loader-bar-fill {
+  width: 40%;
+  background: linear-gradient(90deg, #a5b4fc, #4f46e5, #a5b4fc);
+  animation: loader-bar 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.loader-dot {
+  animation: loader-dot 1.2s ease-out infinite;
+}
+.loader-ellipsis::after {
+  display: inline-block;
+  width: 1.2em;
+  text-align: left;
+  content: "";
+  animation: loader-ellipsis 1.2s steps(1) infinite;
+}
+.loader-card {
+  animation: loader-card-in 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-candle,
+  .loader-trend,
+  .loader-shimmer,
+  .loader-bar-fill,
+  .loader-dot,
+  .loader-ellipsis::after {
+    animation: none;
+  }
+  .loader-candle { opacity: 1; transform: none; }
+  .loader-trend { stroke-dashoffset: 0; opacity: 1; }
+  .loader-bar-fill { width: 100%; }
+}

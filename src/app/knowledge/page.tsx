@@ -1,14 +1,13 @@
 import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { KnowledgeClient } from "./ui";
+import { PageLoader } from "../loader";
 
 export default function KnowledgePage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto max-w-5xl px-4 py-8 text-sm text-zinc-500">
-          Loading…
-        </main>
+        <PageLoader label="Loading knowledge base" />
       }
     >
       <KnowledgeContent />

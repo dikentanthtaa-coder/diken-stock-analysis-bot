@@ -1,13 +1,12 @@
 import { Suspense } from "react";
 import { db } from "@/lib/db";
+import { PageLoader } from "../loader";
 
 export default function JournalPage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto max-w-5xl px-4 py-8 text-sm text-zinc-500">
-          Loading journal…
-        </main>
+        <PageLoader label="Loading journal" />
       }
     >
       <JournalContent />

@@ -2,10 +2,11 @@ import { db } from "@/lib/db";
 import { REQUIRED_PLAYLISTS, CHANNEL_URL } from "@/server/youtube/config";
 import { Suspense } from "react";
 import { LearningClient } from "./ui";
+import { PageLoader } from "../loader";
 
 export default function LearningPage() {
   return (
-    <Suspense fallback={<main className="mx-auto max-w-5xl px-4 py-8 text-sm text-zinc-500">Loading…</main>}>
+    <Suspense fallback={<PageLoader label="Loading learning" />}>
       <LearningContent />
     </Suspense>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnalysisLoader } from "../loader";
 import { CandleChart, type ChartCandle } from "./chart";
 
 interface SymbolHit {
@@ -184,11 +185,7 @@ export function ResearchClient() {
         )}
       </div>
 
-      {analyzing && (
-        <p className="mt-6 text-sm text-zinc-500">
-          Fetching data and running analysis…
-        </p>
-      )}
+      {analyzing && <AnalysisLoader key={q} symbol={q} />}
       {error && (
         <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}

@@ -1,14 +1,13 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { PageLoader } from "./loader";
 
 export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto max-w-5xl px-4 py-8 text-sm text-zinc-500">
-          Loading dashboard…
-        </main>
+        <PageLoader label="Loading dashboard" />
       }
     >
       <DashboardContent />
