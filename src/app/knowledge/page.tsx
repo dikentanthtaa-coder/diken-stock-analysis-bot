@@ -24,8 +24,8 @@ async function KnowledgeContent() {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+    <main className="mx-auto max-w-5xl px-4 py-5 sm:py-8">
+      <h1 className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl">
         Trading Knowledge Base
       </h1>
       <p className="mt-1 text-sm text-zinc-600">

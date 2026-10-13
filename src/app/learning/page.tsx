@@ -33,8 +33,8 @@ async function LearningContent() {
   });
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">YouTube Learning</h1>
+    <main className="mx-auto max-w-5xl px-4 py-5 sm:py-8">
+      <h1 className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl">YouTube Learning</h1>
       <p className="mt-1 text-sm text-zinc-600">
         Source:{" "}
         <a href={CHANNEL_URL} className="underline" target="_blank">

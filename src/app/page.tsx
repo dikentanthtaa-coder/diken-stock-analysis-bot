@@ -77,28 +77,28 @@ async function DashboardContent() {
   ];
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <div className="rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-6 text-white shadow-md sm:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+    <main className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
+      <div className="rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-5 text-white shadow-md sm:px-8 sm:py-6">
+        <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
             <p className="mt-1 text-sm text-indigo-100">
               Everything you&apos;ve done in the app · all market data is end-of-day, never real-time.
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-3xl font-semibold leading-none">{totalActivityWeek}</p>
-            <p className="mt-1 text-xs text-indigo-100">actions in the last 7 days</p>
+          <div className="inline-flex items-baseline gap-2 rounded-full bg-white/15 px-3 py-1.5 ring-1 ring-white/25 sm:block sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-right sm:ring-0">
+            <span className="text-2xl font-semibold leading-none sm:text-3xl">{totalActivityWeek}</span>
+            <span className="text-xs text-indigo-100 sm:mt-1 sm:block">actions in the last 7 days</span>
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/research" className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm hover:bg-indigo-50">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+          <Link href="/research" className="rounded-lg bg-white px-4 py-2.5 text-center text-sm font-medium text-indigo-700 shadow-sm hover:bg-indigo-50">
             Analyze a stock →
           </Link>
-          <Link href="/planner" className="rounded-lg border border-white/50 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/20">
+          <Link href="/planner" className="rounded-lg border border-white/50 bg-white/10 px-4 py-2.5 text-center text-sm font-medium text-white backdrop-blur-sm hover:bg-white/20">
             Plan a trade
           </Link>
-          <Link href="/activity" className="rounded-lg border border-white/50 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/20">
+          <Link href="/activity" className="rounded-lg border border-white/50 bg-white/10 px-4 py-2.5 text-center text-sm font-medium text-white backdrop-blur-sm hover:bg-white/20">
             Full activity history
           </Link>
         </div>
@@ -107,10 +107,10 @@ async function DashboardContent() {
       {/* Stat tiles */}
       <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         {tiles.map(([v, label, href, bar]) => (
-          <Link key={label} href={href} className="group relative overflow-hidden rounded-lg border border-zinc-200 p-4 transition-shadow hover:shadow-md">
+          <Link key={label} href={href} className="group relative overflow-hidden rounded-lg border border-zinc-200 p-3 transition-shadow hover:shadow-md sm:p-4">
             <span className={`absolute inset-x-0 top-0 h-1 ${bar}`} />
-            <p className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">{v}</p>
-            <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-400">{label}</p>
+            <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">{v}</p>
+            <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-zinc-400 sm:text-xs">{label}</p>
           </Link>
         ))}
       </div>
@@ -187,7 +187,7 @@ async function DashboardContent() {
             <Empty>No paper trades yet.</Empty>
           ) : (
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="rtable w-full text-sm">
                 <thead className="text-left text-xs text-zinc-400">
                   <tr>
                     <th className="py-1 font-medium">Stock</th>
@@ -201,14 +201,14 @@ async function DashboardContent() {
                 <tbody className="divide-y divide-zinc-100">
                   {d.trades.slice(0, 8).map((t) => (
                     <tr key={t.id}>
-                      <td className="py-1.5 font-medium">{t.symbol}</td>
-                      <td className="py-1.5 text-zinc-500">{t.status}</td>
-                      <td className="py-1.5 text-right tabular-nums">{t.entryPrice != null ? `₹${t.entryPrice}` : "—"}</td>
-                      <td className="py-1.5 text-right tabular-nums">{t.quantity ?? "—"}</td>
-                      <td className={`py-1.5 text-right tabular-nums ${t.pnl == null ? "text-zinc-400" : t.pnl >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+                      <td data-label="Stock" data-primary="" className="py-1.5 font-medium">{t.symbol}</td>
+                      <td data-label="Status" className="py-1.5 text-zinc-500">{t.status}</td>
+                      <td data-label="Entry" className="py-1.5 text-right tabular-nums">{t.entryPrice != null ? `₹${t.entryPrice}` : "—"}</td>
+                      <td data-label="Qty" className="py-1.5 text-right tabular-nums">{t.quantity ?? "—"}</td>
+                      <td data-label="P&L" className={`py-1.5 text-right tabular-nums ${t.pnl == null ? "text-zinc-400" : t.pnl >= 0 ? "text-emerald-700" : "text-red-700"}`}>
                         {t.pnl == null ? "—" : inr(t.pnl)}
                       </td>
-                      <td className="py-1.5 text-right tabular-nums text-zinc-600">{t.r == null ? "—" : `${t.r >= 0 ? "+" : ""}${t.r.toFixed(2)}R`}</td>
+                      <td data-label="R" className="py-1.5 text-right tabular-nums text-zinc-600">{t.r == null ? "—" : `${t.r >= 0 ? "+" : ""}${t.r.toFixed(2)}R`}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -222,7 +222,7 @@ async function DashboardContent() {
             <Empty>No backtests yet.</Empty>
           ) : (
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="rtable w-full text-sm">
                 <thead className="text-left text-xs text-zinc-400">
                   <tr>
                     <th className="py-1 font-medium">Stock</th>
@@ -237,13 +237,13 @@ async function DashboardContent() {
                 <tbody className="divide-y divide-zinc-100">
                   {d.backtests.map((b) => (
                     <tr key={b.id} className={b.status === "failed" ? "text-red-700" : ""}>
-                      <td className="py-1.5 font-medium">{b.symbol ?? b.name}</td>
-                      <td className="py-1.5 text-right tabular-nums">{b.status === "failed" ? "failed" : b.trades}</td>
-                      <td className="py-1.5 text-right tabular-nums">{pct(b.winRate)}</td>
-                      <td className="py-1.5 text-right tabular-nums">{num(b.avgR)}</td>
-                      <td className="py-1.5 text-right tabular-nums">{num(b.profitFactor)}</td>
-                      <td className="py-1.5 text-right tabular-nums">{b.maxDD == null ? "—" : `${b.maxDD.toFixed(1)}%`}</td>
-                      <td className="py-1.5 text-right text-xs text-zinc-400">{shortDay(b.createdAt)}</td>
+                      <td data-label="Stock" data-primary="" className="py-1.5 font-medium">{b.symbol ?? b.name}</td>
+                      <td data-label="Trades" className="py-1.5 text-right tabular-nums">{b.status === "failed" ? "failed" : b.trades}</td>
+                      <td data-label="Win" className="py-1.5 text-right tabular-nums">{pct(b.winRate)}</td>
+                      <td data-label="Avg R" className="py-1.5 text-right tabular-nums">{num(b.avgR)}</td>
+                      <td data-label="PF" className="py-1.5 text-right tabular-nums">{num(b.profitFactor)}</td>
+                      <td data-label="Max DD" className="py-1.5 text-right tabular-nums">{b.maxDD == null ? "—" : `${b.maxDD.toFixed(1)}%`}</td>
+                      <td data-label="When" className="py-1.5 text-right text-xs text-zinc-400">{shortDay(b.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -309,19 +309,19 @@ async function DashboardContent() {
               Empty. Add stocks from the <Link href="/research" className="underline">Research</Link> page.
             </Empty>
           ) : (
-            <table className="mt-2 w-full text-sm">
+            <table className="rtable mt-2 w-full text-sm">
               <tbody className="divide-y divide-zinc-100">
                 {d.watchItems.map((i) => (
                   <tr key={i.id}>
-                    <td className="py-2 font-medium">
+                    <td data-label="Stock" data-primary="" className="py-2 font-medium">
                       <Link href={`/research?symbol=${encodeURIComponent(i.symbol)}&exchange=${i.exchange}`} className="hover:text-indigo-700">{i.symbol}</Link>
                     </td>
-                    <td className="py-2 text-zinc-500">{i.exchange}</td>
-                    <td className="py-2 text-right tabular-nums">{i.lastClose != null ? `₹${i.lastClose.toFixed(2)}` : "—"}</td>
-                    <td className={`py-2 text-right tabular-nums ${i.changePct == null ? "text-zinc-400" : i.changePct >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                    <td data-label="Exchange" className="py-2 text-zinc-500">{i.exchange}</td>
+                    <td data-label="Last close" className="py-2 text-right tabular-nums">{i.lastClose != null ? `₹${i.lastClose.toFixed(2)}` : "—"}</td>
+                    <td data-label="Change" className={`py-2 text-right tabular-nums ${i.changePct == null ? "text-zinc-400" : i.changePct >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                       {i.changePct != null ? `${i.changePct >= 0 ? "+" : ""}${i.changePct.toFixed(2)}%` : "—"}
                     </td>
-                    <td className="py-2 text-right text-xs text-zinc-400">{i.lastDate ?? ""}</td>
+                    <td data-label="Date" className="py-2 text-right text-xs text-zinc-400">{i.lastDate ?? ""}</td>
                   </tr>
                 ))}
               </tbody>
@@ -359,7 +359,7 @@ async function DashboardContent() {
             <Empty>No market data cached yet.</Empty>
           ) : (
             <div className="mt-2 overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="rtable w-full text-sm">
                 <thead className="text-left text-xs text-zinc-400">
                   <tr>
                     <th className="py-1 font-medium">Stock</th>
@@ -372,11 +372,11 @@ async function DashboardContent() {
                 <tbody className="divide-y divide-zinc-100">
                   {d.coverage.map((r) => (
                     <tr key={`${r.symbol}-${r.exchange}`}>
-                      <td className="py-1.5 font-medium">{r.symbol} <span className="font-normal text-zinc-400">{r.exchange}</span></td>
-                      <td className="py-1.5 text-zinc-500">{r.provider}</td>
-                      <td className="py-1.5 text-right tabular-nums">{r.candles}</td>
-                      <td className="py-1.5 text-xs text-zinc-500">{r.first ?? "—"} → {r.last ?? "—"}</td>
-                      <td className="py-1.5 text-xs text-zinc-400">{r.lastSync ? `${dayKey(r.lastSync)} ${timeOfDay(r.lastSync)}` : "—"}{r.error ? ` · ${r.error}` : ""}</td>
+                      <td data-label="Stock" data-primary="" className="py-1.5 font-medium">{r.symbol} <span className="font-normal text-zinc-400">{r.exchange}</span></td>
+                      <td data-label="Provider" className="py-1.5 text-zinc-500">{r.provider}</td>
+                      <td data-label="Candles" className="py-1.5 text-right tabular-nums">{r.candles}</td>
+                      <td data-label="Range" className="py-1.5 text-xs text-zinc-500">{r.first ?? "—"} → {r.last ?? "—"}</td>
+                      <td data-label="Last sync" className="py-1.5 text-xs text-zinc-400">{r.lastSync ? `${dayKey(r.lastSync)} ${timeOfDay(r.lastSync)}` : "—"}{r.error ? ` · ${r.error}` : ""}</td>
                     </tr>
                   ))}
                 </tbody>

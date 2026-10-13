@@ -22,17 +22,21 @@ export function ActivityList({ items, grouped = false }: { items: { id: string; 
         return (
           <li key={e.id}>
             {showDay && <p className="pt-3 pb-1 text-xs font-medium uppercase tracking-wide text-zinc-400">{shortDay(e.at)} · {day}</p>}
-            <div className="flex items-start gap-3 py-2">
+            <div className="flex items-start gap-2.5 py-2.5 sm:gap-3">
               <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${KIND_STYLE[e.kind]}`}>{KIND_LABEL[e.kind]}</span>
               <div className="min-w-0 flex-1">
                 {e.href ? (
-                  <Link href={e.href} className="text-zinc-900 hover:text-indigo-700">{e.title}</Link>
+                  <Link href={e.href} className="block text-zinc-900 hover:text-indigo-700">{e.title}</Link>
                 ) : (
-                  <span className="text-zinc-900">{e.title}</span>
+                  <span className="block text-zinc-900">{e.title}</span>
                 )}
-                {e.meta && <span className="ml-2 text-xs text-zinc-400">{e.meta}</span>}
+                <span className="mt-0.5 block text-xs text-zinc-400 sm:hidden">
+                  {grouped ? timeOfDay(e.at) : `${shortDay(e.at)} ${timeOfDay(e.at)}`}
+                  {e.meta ? ` · ${e.meta}` : ""}
+                </span>
+                {e.meta && <span className="ml-2 hidden text-xs text-zinc-400 sm:inline">{e.meta}</span>}
               </div>
-              <span className="shrink-0 text-xs text-zinc-400">{grouped ? timeOfDay(e.at) : `${shortDay(e.at)} ${timeOfDay(e.at)}`}</span>
+              <span className="hidden shrink-0 text-xs text-zinc-400 sm:block">{grouped ? timeOfDay(e.at) : `${shortDay(e.at)} ${timeOfDay(e.at)}`}</span>
             </div>
           </li>
         );

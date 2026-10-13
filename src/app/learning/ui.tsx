@@ -139,7 +139,7 @@ export function LearningClient({
 
   return (
     <div className="mt-6">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={syncAll}
           disabled={syncing}
@@ -160,7 +160,7 @@ export function LearningClient({
 
       {playlists.map((p) => (
         <section key={p.id} className="mt-8">
-          <div className="flex items-baseline justify-between">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
             <h2 className="font-medium text-zinc-900">
               <a href={p.url} target="_blank" className="hover:underline">
                 {p.title}
@@ -172,7 +172,53 @@ export function LearningClient({
                 ` · synced ${new Date(p.lastSynced).toLocaleString()}`}
             </span>
           </div>
-          <div className="mt-2 overflow-x-auto rounded-lg border border-zinc-200">
+          {/* Phone: card list */}
+          <ul className="mt-2 space-y-2 md:hidden">
+            {p.videos.map((v, i) => (
+              <li key={v.id} className="rounded-lg border border-zinc-200 p-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="mt-0.5 w-5 shrink-0 text-xs text-zinc-400">{i + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <a href={v.url} target="_blank" className="block text-zinc-800 hover:underline">
+                      {v.title}
+                    </a>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                      <span className={`rounded-full px-2 py-0.5 ${STATUS_STYLES[v.status] ?? "bg-zinc-100"}`}>
+                        {busy === v.id ? "Working…" : v.status}
+                      </span>
+                      <span>{fmtDuration(v.durationSec)}</span>
+                    </div>
+                    {v.statusNote && (
+                      <p className="mt-1 line-clamp-2 text-xs text-zinc-400" title={v.statusNote}>
+                        {v.statusNote}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  {v.status !== "Completed" && (
+                    <button
+                      onClick={() => processVideo(v)}
+                      disabled={busy !== null}
+                      className="rounded-md border border-zinc-300 px-3 py-1.5 hover:bg-zinc-50 disabled:opacity-40"
+                    >
+                      {v.status === "Failed" || v.status === "TranscriptUnavailable" ? "Retry" : "Process"}
+                    </button>
+                  )}
+                  {v.status === "Completed" && (
+                    <button onClick={() => viewTranscript(v)} className="rounded-md border border-zinc-300 px-3 py-1.5 hover:bg-zinc-50">
+                      Transcript
+                    </button>
+                  )}
+                  <button onClick={() => setImporting(v)} className="rounded-md border border-zinc-300 px-3 py-1.5 text-zinc-500 hover:bg-zinc-50">
+                    Import
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {/* Tablet/desktop: table */}
+          <div className="mt-2 hidden overflow-x-auto rounded-lg border border-zinc-200 md:block">
             <table className="w-full text-sm">
               <thead className="bg-zinc-50 text-left text-xs text-zinc-500">
                 <tr>
@@ -252,7 +298,7 @@ export function LearningClient({
       {viewing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setViewing(null)}>
           <div
-            className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl"
+            className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-4 shadow-xl sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -272,7 +318,7 @@ export function LearningClient({
       {importing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setImporting(null)}>
           <div
-            className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl"
+            className="w-full max-w-2xl rounded-lg bg-white p-4 shadow-xl sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-medium text-zinc-900">Import authorized transcript</h3>

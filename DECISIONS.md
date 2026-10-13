@@ -130,7 +130,7 @@
 
 ## Phase 12 (2026-10-13) — Candlewise brand, 7-day activity retention
 
-- **Name: TradeForge** (replaced DKN Alpha → Candlewise; user wanted more "vibe"). Logo is an original "trading bot" mark (robot head in a neon cyan→violet hexagon, visor shows a rising candlestick chart) — drawn in-house, not taken from image search, to avoid using someone else's trademarked artwork. `src/app/brand.tsx`
+- **Name: Stock Pilot** (user picked from four options after DKN Alpha, Candlewise and TradeForge were rejected). Logo is an original "trading bot" mark (robot head in a neon cyan→violet hexagon, visor shows a rising candlestick chart) — drawn in-house, not taken from image search, to avoid using someone else's trademarked artwork. `src/app/brand.tsx`
   holds `APP_NAME`/`APP_TAGLINE`, the SVG logo mark and wordmark; the
   favicon is `src/app/icon.svg`. Page titles use the metadata template.
 - **Activity retention = 7 days.** `pruneOldActivity()` deletes
@@ -140,3 +140,22 @@
   The dashboard activity chart and "searches" tile use the same window.
 - **Activity page pagination:** 25 per page, `?page=N&kind=…`; the whole
   week is fetched (bounded by the window) and sliced in memory.
+
+## Phase 13 (2026-10-13) — Mobile-first responsive pass
+
+- **Navigation:** phones get a fixed bottom tab bar (Dashboard, Research,
+  Planner, Paper, More) and a "More" bottom sheet listing all pages with
+  icons; tablets/desktop keep the scrollable tab bar. Sheet closes on route
+  change via the state-from-props pattern (no setState in effects — the
+  React Compiler lint forbids it).
+- **Tables:** generic `.rtable` CSS (globals.css) turns rows into labelled
+  cards under 640px using `data-label` on each `<td>` and `data-primary`
+  on the identifying cell. Applied to dashboard, backtest and journal
+  tables; Learning and Journal history additionally have dedicated card
+  markup. Keep this pattern for any new table.
+- **Ergonomics:** 16px inputs on phones (no iOS zoom), 40px tap targets,
+  footer padding clears the bottom bar, tagline hidden on xs, page padding
+  and h1 sizes scale down, research chart 300px tall under 640px.
+- **Verification:** `scratchpad/shot.mjs` drives headless Chrome over the
+  DevTools protocol with device emulation (390/320/768) — plain
+  `--window-size` can't go below ~500px on macOS.

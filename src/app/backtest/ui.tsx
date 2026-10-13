@@ -137,7 +137,7 @@ export function BacktestClient() {
             periods split 60/20/20 chronologically.
           </p>
           <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200">
-            <table className="w-full text-sm">
+            <table className="rtable w-full text-sm">
               <thead className="bg-zinc-50 text-left text-xs text-zinc-500">
                 <tr>
                   <th className="px-3 py-2">Period</th>
@@ -153,28 +153,28 @@ export function BacktestClient() {
               <tbody className="divide-y divide-zinc-100">
                 {data.result.periods.map((p) => (
                   <tr key={p.label}>
-                    <td className="px-3 py-2 font-medium">{p.label}</td>
-                    <td className="px-3 py-2 text-xs text-zinc-500">
+                    <td data-label="Period" data-primary="" className="px-3 py-2 font-medium">{p.label}</td>
+                    <td data-label="Dates" className="px-3 py-2 text-xs text-zinc-500">
                       {p.from} → {p.to}
                     </td>
-                    <td className="px-3 py-2">{p.tradeCount}</td>
-                    <td className="px-3 py-2">
+                    <td data-label="Trades" className="px-3 py-2">{p.tradeCount}</td>
+                    <td data-label="Win rate" className="px-3 py-2">
                       {p.winRate != null ? `${(p.winRate * 100).toFixed(0)}%` : "—"}
                     </td>
-                    <td className="px-3 py-2">
+                    <td data-label="Avg R" className="px-3 py-2">
                       {p.avgR != null ? p.avgR.toFixed(2) : "—"}
                     </td>
-                    <td className="px-3 py-2">
+                    <td data-label="Profit factor" className="px-3 py-2">
                       {p.profitFactor != null
                         ? p.profitFactor === Infinity
                           ? "∞ (no losses)"
                           : p.profitFactor.toFixed(2)
                         : "—"}
                     </td>
-                    <td className="px-3 py-2">
+                    <td data-label="Max DD" className="px-3 py-2">
                       {p.maxDrawdownPct != null ? `${p.maxDrawdownPct.toFixed(1)}%` : "—"}
                     </td>
-                    <td className="px-3 py-2">
+                    <td data-label="Details" className="px-3 py-2">
                       {p.tradeCount > 0 && (
                         <button
                           onClick={() =>
@@ -197,7 +197,7 @@ export function BacktestClient() {
               .filter((p) => p.label === showTrades)
               .map((p) => (
                 <div key={p.label} className="mt-3 overflow-x-auto rounded-lg border border-zinc-200">
-                  <table className="w-full text-xs">
+                  <table className="rtable w-full text-xs">
                     <thead className="bg-zinc-50 text-left text-zinc-500">
                       <tr>
                         <th className="px-3 py-2">Entry</th>
@@ -211,20 +211,20 @@ export function BacktestClient() {
                     <tbody className="divide-y divide-zinc-100">
                       {p.trades.map((t, i) => (
                         <tr key={i}>
-                          <td className="px-3 py-1.5">
+                          <td data-label="Entry" data-primary="" className="px-3 py-1.5">
                             {t.entryDate} @ ₹{t.entryPrice.toFixed(2)}
                           </td>
-                          <td className="px-3 py-1.5">
+                          <td data-label="Exit" className="px-3 py-1.5">
                             {t.exitDate} @ ₹{t.exitPrice.toFixed(2)}
                           </td>
-                          <td className="px-3 py-1.5">{t.exitReason}</td>
-                          <td className="px-3 py-1.5">{t.bars}</td>
-                          <td
+                          <td data-label="Reason" className="px-3 py-1.5">{t.exitReason}</td>
+                          <td data-label="Bars" className="px-3 py-1.5">{t.bars}</td>
+                          <td data-label="Net %"
                             className={`px-3 py-1.5 ${t.netReturnPct >= 0 ? "text-emerald-600" : "text-red-600"}`}
                           >
                             {t.netReturnPct.toFixed(2)}%
                           </td>
-                          <td className="px-3 py-1.5">{t.rMultiple.toFixed(2)}</td>
+                          <td data-label="R" className="px-3 py-1.5">{t.rMultiple.toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>

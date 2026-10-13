@@ -30,7 +30,7 @@ export function CandleChart({
   useEffect(() => {
     if (!ref.current || candles.length === 0) return;
     const chart = createChart(ref.current, {
-      height: 420,
+      height: ref.current.clientWidth < 640 ? 300 : 420,
       layout: { background: { color: "#ffffff" }, textColor: "#3f3f46" },
       grid: {
         vertLines: { color: "#f4f4f5" },

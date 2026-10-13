@@ -31,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col bg-[#f7f7f8] text-zinc-900">
         <TopNav />
         <div className="flex-1">{children}</div>
-        <footer className="mt-12 border-t border-zinc-200 bg-white">
+        <footer className="mt-10 border-t border-zinc-200 bg-white pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 text-xs text-zinc-400">
             <span className="flex items-center gap-1.5 font-medium text-zinc-500">
               <LogoMark size={16} /> {APP_NAME}

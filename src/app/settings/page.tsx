@@ -33,8 +33,8 @@ async function SettingsContent() {
   const keyStatus = (v: string) => (v ? "configured" : "not set (optional)");
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Settings & Status</h1>
+    <main className="mx-auto max-w-4xl px-4 py-5 sm:py-8">
+      <h1 className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl">Settings & Status</h1>
 
       <section className="mt-6">
         <h2 className="font-medium text-zinc-900">Market data providers</h2>
@@ -42,7 +42,7 @@ async function SettingsContent() {
           {health.map((h) => (
             <li
               key={h.id}
-              className="flex items-center gap-3 rounded-md border border-zinc-200 p-3"
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-zinc-200 p-3"
             >
               <span
                 className={`h-2.5 w-2.5 rounded-full ${h.ok ? "bg-emerald-500" : "bg-red-500"}`}
@@ -62,17 +62,17 @@ async function SettingsContent() {
 
       <section className="mt-8">
         <h2 className="font-medium text-zinc-900">API keys (server-side only)</h2>
-        <dl className="mt-2 grid grid-cols-2 gap-y-2 text-sm">
-          <dt className="text-zinc-500">MARKET_DATA_API_KEY</dt>
-          <dd>{keyStatus(env.MARKET_DATA_API_KEY)}</dd>
-          <dt className="text-zinc-500">AI_PROVIDER / AI_API_KEY</dt>
-          <dd>
+        <dl className="mt-2 grid grid-cols-1 gap-y-1 text-sm sm:grid-cols-[14rem_1fr] sm:gap-y-2">
+          <dt className="text-xs text-zinc-500 sm:text-sm">MARKET_DATA_API_KEY</dt>
+          <dd className="mb-2 sm:mb-0">{keyStatus(env.MARKET_DATA_API_KEY)}</dd>
+          <dt className="text-xs text-zinc-500 sm:text-sm">AI_PROVIDER / AI_API_KEY</dt>
+          <dd className="mb-2 sm:mb-0">
             {env.AI_PROVIDER && env.AI_API_KEY
               ? `configured (${env.AI_PROVIDER}) — unverified until first use`
               : "not set (optional — heuristic extraction active)"}
           </dd>
-          <dt className="text-zinc-500">YOUTUBE_API_KEY</dt>
-          <dd>{keyStatus(env.YOUTUBE_API_KEY)}</dd>
+          <dt className="text-xs text-zinc-500 sm:text-sm">YOUTUBE_API_KEY</dt>
+          <dd className="mb-2 sm:mb-0">{keyStatus(env.YOUTUBE_API_KEY)}</dd>
         </dl>
         <p className="mt-2 text-xs text-zinc-500">
           Keys live in <code>.env</code> (gitignored) and never reach the
@@ -82,17 +82,17 @@ async function SettingsContent() {
 
       <section className="mt-8">
         <h2 className="font-medium text-zinc-900">Database (Supabase Postgres)</h2>
-        <dl className="mt-2 grid grid-cols-2 gap-y-2 text-sm">
-          <dt className="text-zinc-500">Stocks cached</dt>
-          <dd>{stockCount}</dd>
-          <dt className="text-zinc-500">Daily candles cached</dt>
-          <dd>{candleCount}</dd>
-          <dt className="text-zinc-500">Videos tracked</dt>
-          <dd>{videoCount}</dd>
-          <dt className="text-zinc-500">Analyses saved</dt>
-          <dd>{analysisCount}</dd>
-          <dt className="text-zinc-500">Connection</dt>
-          <dd>
+        <dl className="mt-2 grid grid-cols-1 gap-y-1 text-sm sm:grid-cols-[14rem_1fr] sm:gap-y-2">
+          <dt className="text-xs text-zinc-500 sm:text-sm">Stocks cached</dt>
+          <dd className="mb-2 sm:mb-0">{stockCount}</dd>
+          <dt className="text-xs text-zinc-500 sm:text-sm">Daily candles cached</dt>
+          <dd className="mb-2 sm:mb-0">{candleCount}</dd>
+          <dt className="text-xs text-zinc-500 sm:text-sm">Videos tracked</dt>
+          <dd className="mb-2 sm:mb-0">{videoCount}</dd>
+          <dt className="text-xs text-zinc-500 sm:text-sm">Analyses saved</dt>
+          <dd className="mb-2 sm:mb-0">{analysisCount}</dd>
+          <dt className="text-xs text-zinc-500 sm:text-sm">Connection</dt>
+          <dd className="mb-2 sm:mb-0">
             <code>DATABASE_URL</code> (env, never shown)
           </dd>
         </dl>

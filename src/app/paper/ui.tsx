@@ -223,7 +223,7 @@ export function PaperClient() {
           onClick={() => setClosing(null)}
         >
           <div
-            className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-lg bg-white p-4 shadow-xl sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-medium text-zinc-900">

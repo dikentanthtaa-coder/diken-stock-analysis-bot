@@ -185,3 +185,77 @@ main {
   .loader-trend { stroke-dashoffset: 0; opacity: 1; }
   .loader-bar-fill { width: 100%; }
 }
+
+/* ---- Mobile ergonomics ---- */
+@media (max-width: 767px) {
+  /* 16px inputs stop iOS Safari from zooming on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  /* Comfortable tap targets */
+  button,
+  a[role="button"] {
+    min-height: 40px;
+  }
+  table {
+    font-size: 13px;
+  }
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+body {
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+/* ---- Responsive tables: rows become labelled cards on phones ----
+   Usage: <table class="rtable"> with data-label="Column" on every <td>.
+   Mark the identifying cell with data-primary. */
+@media (max-width: 639px) {
+  table.rtable thead {
+    display: none;
+  }
+  table.rtable,
+  table.rtable tbody,
+  table.rtable tr,
+  table.rtable td {
+    display: block;
+    width: 100%;
+  }
+  table.rtable tr {
+    padding: 0.6rem 0.25rem;
+  }
+  table.rtable td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.15rem 0 !important;
+    text-align: right !important;
+  }
+  table.rtable td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    color: #71717a;
+    font-size: 12px;
+    font-weight: 400;
+    text-align: left;
+  }
+  table.rtable td[data-primary] {
+    justify-content: flex-start;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left !important;
+    padding-bottom: 0.3rem !important;
+  }
+  table.rtable td[data-primary]::before {
+    display: none;
+  }
+  table.rtable td:empty {
+    display: none;
+  }
+}

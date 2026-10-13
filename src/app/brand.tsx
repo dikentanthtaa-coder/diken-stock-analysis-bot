@@ -1,5 +1,5 @@
-export const APP_NAME = "TradeForge";
-export const APP_TAGLINE = "Trading analysis bot · NSE & BSE";
+export const APP_NAME = "Stock Pilot";
+export const APP_TAGLINE = "Your trading analysis co-pilot";
 
 /**
  * Logo mark: a trading bot — robot head inside a neon hexagon badge, visor
@@ -60,8 +60,8 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
   const cls = size === "lg" ? "text-3xl" : "text-[18px]";
   return (
     <span className={`${cls} font-extrabold tracking-tight text-zinc-900`}>
-      Trade
-      <span className="bg-gradient-to-r from-cyan-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent">Forge</span>
+      Stock{" "}
+      <span className="bg-gradient-to-r from-cyan-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent">Pilot</span>
     </span>
   );
 }
@@ -69,11 +69,11 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
 export function Brand({ withTagline = false }: { withTagline?: boolean }) {
   return (
     <span className="flex items-center gap-2.5">
-      <LogoMark size={40} className="drop-shadow-[0_2px_6px_rgba(99,102,241,0.35)]" />
+      <LogoMark size={36} className="shrink-0 drop-shadow-[0_2px_6px_rgba(99,102,241,0.35)] sm:h-10 sm:w-10" />
       <span className="flex flex-col leading-none">
         <Wordmark />
         {withTagline && (
-          <span className="mt-1 text-[10.5px] font-medium uppercase tracking-[0.14em] text-zinc-400">{APP_TAGLINE}</span>
+          <span className="mt-1 hidden text-[10.5px] font-medium uppercase tracking-[0.14em] text-zinc-400 sm:block">{APP_TAGLINE}</span>
         )}
       </span>
     </span>

@@ -52,27 +52,27 @@ async function JournalContent() {
     n.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Trade Journal</h1>
+    <main className="mx-auto max-w-5xl px-4 py-5 sm:py-8">
+      <h1 className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl">Trade Journal</h1>
       <p className="mt-1 text-sm text-zinc-600">
         Paper-trade outcomes vs original theses, analysis history, and
         backtest runs. Everything here is hypothetical research.
       </p>
 
-      <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-zinc-200 p-4">
-          <p className="text-2xl font-semibold text-zinc-900">{closedTrades.length}</p>
+      <section className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-lg border border-zinc-200 p-3 sm:p-4">
+          <p className="text-xl font-semibold text-zinc-900 sm:text-2xl">{closedTrades.length}</p>
           <p className="text-xs text-zinc-500">closed paper trades</p>
         </div>
-        <div className="rounded-lg border border-zinc-200 p-4">
-          <p className="text-2xl font-semibold text-zinc-900">
+        <div className="rounded-lg border border-zinc-200 p-3 sm:p-4">
+          <p className="text-xl font-semibold text-zinc-900 sm:text-2xl">
             {closedPnls.length ? `${wins}/${closedPnls.length}` : "—"}
           </p>
           <p className="text-xs text-zinc-500">winners</p>
         </div>
-        <div className="rounded-lg border border-zinc-200 p-4">
+        <div className="rounded-lg border border-zinc-200 p-3 sm:p-4">
           <p
-            className={`text-2xl font-semibold ${totalPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}
+            className={`text-xl font-semibold sm:text-2xl ${totalPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}
           >
             {closedPnls.length ? inr(totalPnl) : "—"}
           </p>
@@ -138,8 +138,26 @@ async function JournalContent() {
         {analyses.length === 0 ? (
           <p className="mt-2 text-sm text-zinc-500">No analyses saved yet.</p>
         ) : (
-          <div className="mt-2 overflow-x-auto rounded-lg border border-zinc-200">
-            <table className="w-full text-sm">
+          <>
+          <ul className="mt-2 divide-y divide-zinc-100 rounded-lg border border-zinc-200 md:hidden">
+            {analyses.map((a) => (
+              <li key={a.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {a.stock.symbol} <span className="font-normal text-zinc-400">{a.stock.exchange}</span>
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {a.createdAt.toISOString().slice(0, 16).replace("T", " ")} · as of {a.asOfDate.toISOString().slice(0, 10)}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">
+                  {OUTCOME_LABEL[a.outcome] ?? a.outcome}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 hidden overflow-x-auto rounded-lg border border-zinc-200 md:block">
+            <table className="rtable w-full text-sm">
               <thead className="bg-zinc-50 text-left text-xs text-zinc-500">
                 <tr>
                   <th className="px-3 py-2">Date</th>
@@ -151,14 +169,14 @@ async function JournalContent() {
               <tbody className="divide-y divide-zinc-100">
                 {analyses.map((a) => (
                   <tr key={a.id}>
-                    <td className="px-3 py-2 text-xs text-zinc-500">
+                    <td data-label="Date" data-primary="" className="px-3 py-2 text-xs text-zinc-500">
                       {a.createdAt.toISOString().slice(0, 16).replace("T", " ")}
                     </td>
-                    <td className="px-3 py-2 font-medium">
+                    <td data-label="Stock" className="px-3 py-2 font-medium">
                       {a.stock.symbol} · {a.stock.exchange}
                     </td>
-                    <td className="px-3 py-2">{OUTCOME_LABEL[a.outcome] ?? a.outcome}</td>
-                    <td className="px-3 py-2 text-xs text-zinc-500">
+                    <td data-label="Outcome" className="px-3 py-2">{OUTCOME_LABEL[a.outcome] ?? a.outcome}</td>
+                    <td data-label="As of" className="px-3 py-2 text-xs text-zinc-500">
                       {a.asOfDate.toISOString().slice(0, 10)}
                     </td>
                   </tr>
@@ -166,6 +184,7 @@ async function JournalContent() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
 
