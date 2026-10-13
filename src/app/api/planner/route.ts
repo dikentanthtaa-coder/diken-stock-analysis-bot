@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logActivity } from "@/server/activity";
 import { z } from "zod";
 import { planLongTrade } from "@/server/planner/calc";
 
@@ -21,5 +22,19 @@ export async function POST(req: Request) {
     );
   }
   const result = planLongTrade(parsed.data);
+  if (result.ok) {
+    await logActivity({
+      kind: "planner",
+      title: `Planned trade · entry ₹${parsed.data.entryPrice} · stop ₹${parsed.data.stopLoss} · qty ${result.finalQty}`,
+      detail: {
+        input: parsed.data,
+        finalQty: result.finalQty,
+        capitalRequired: result.capitalRequired,
+        plannedLossAtStop: result.plannedLossAtStop,
+        riskRewardT1: result.riskRewardT1,
+      },
+      href: "/planner",
+    });
+  }
   return NextResponse.json(result, { status: result.ok ? 200 : 422 });
 }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { ResearchClient } from "./ui";
 
 export default function ResearchPage() {
@@ -8,7 +9,9 @@ export default function ResearchPage() {
         NSE/BSE equities · end-of-day data · deterministic analysis with
         knowledge-base rule matching. Not investment advice.
       </p>
-      <ResearchClient />
+      <Suspense fallback={null}>
+        <ResearchClient />
+      </Suspense>
     </main>
   );
 }

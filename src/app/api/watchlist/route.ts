@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { logActivity } from "@/server/activity";
 
 async function defaultWatchlist() {
   return db.watchlist.upsert({
@@ -68,6 +69,14 @@ export async function POST(req: Request) {
     update: { note: note ?? undefined },
     create: { watchlistId: wl.id, stockId: stock.id, note },
   });
+  await logActivity({
+    kind: "watchlist",
+    title: `Added ${stock.symbol} to watchlist`,
+    detail: { note: note ?? null },
+    symbol: stock.symbol,
+    exchange: stock.exchange,
+    href: "/",
+  });
   return NextResponse.json({ ok: true, itemId: item.id });
 }
 
@@ -78,6 +87,18 @@ export async function DELETE(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
   }
+  const existing = await db.watchlistItem
+    .findUnique({ where: { id: parsed.data.itemId }, include: { stock: true } })
+    .catch(() => null);
   await db.watchlistItem.delete({ where: { id: parsed.data.itemId } }).catch(() => {});
+  if (existing) {
+    await logActivity({
+      kind: "watchlist",
+      title: `Removed ${existing.stock.symbol} from watchlist`,
+      symbol: existing.stock.symbol,
+      exchange: existing.stock.exchange,
+      href: "/",
+    });
+  }
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { logActivity } from "@/server/activity";
 
 const patchSchema = z.object({
   action: z.enum(["open", "close", "cancel", "review"]),
@@ -18,7 +19,7 @@ export async function PATCH(
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
   }
-  const trade = await db.paperTrade.findUnique({ where: { id } });
+  const trade = await db.paperTrade.findUnique({ where: { id }, include: { stock: true } });
   if (!trade) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
@@ -56,6 +57,24 @@ export async function PATCH(
   } else if (d.action === "review") {
     await db.paperTrade.update({ where: { id }, data: { review: d.review ?? "" } });
   }
+  const pnl =
+    d.action === "close" && d.exitPrice != null && trade.entryPrice != null && trade.quantity != null
+      ? (d.exitPrice - trade.entryPrice) * trade.quantity
+      : null;
+  const titles: Record<string, string> = {
+    open: `Opened paper trade ${trade.stock.symbol}`,
+    close: `Closed paper trade ${trade.stock.symbol}${pnl != null ? ` · ${pnl >= 0 ? "+" : ""}₹${pnl.toFixed(0)}` : ""}`,
+    cancel: `Cancelled paper trade ${trade.stock.symbol}`,
+    review: `Reviewed paper trade ${trade.stock.symbol}`,
+  };
+  await logActivity({
+    kind: "paper",
+    title: titles[d.action],
+    detail: { action: d.action, tradeId: id, exitPrice: d.exitPrice ?? null, exitReason: d.exitReason ?? null, pnl },
+    symbol: trade.stock.symbol,
+    exchange: trade.stock.exchange,
+    href: "/paper",
+  });
   return NextResponse.json({ ok: true });
 }
 
@@ -64,6 +83,19 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const existing = await db.paperTrade
+    .findUnique({ where: { id }, include: { stock: true } })
+    .catch(() => null);
   await db.paperTrade.delete({ where: { id } }).catch(() => {});
+  if (existing) {
+    await logActivity({
+      kind: "paper",
+      title: `Deleted paper trade ${existing.stock.symbol}`,
+      detail: { action: "delete", tradeId: id },
+      symbol: existing.stock.symbol,
+      exchange: existing.stock.exchange,
+      href: "/paper",
+    });
+  }
   return NextResponse.json({ ok: true });
 }

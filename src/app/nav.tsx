@@ -12,6 +12,7 @@ const NAV = [
   { href: "/backtest", label: "Backtest" },
   { href: "/paper", label: "Paper" },
   { href: "/journal", label: "Journal" },
+  { href: "/activity", label: "Activity" },
   { href: "/settings", label: "Settings" },
 ];
 

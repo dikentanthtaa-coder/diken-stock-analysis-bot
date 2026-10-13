@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { logActivity } from "@/server/activity";
 
 export async function GET() {
   const trades = await db.paperTrade.findMany({
@@ -57,6 +58,22 @@ export async function POST(req: Request) {
       thesis: d.thesis,
       analysisId: d.analysisId,
     },
+  });
+  await logActivity({
+    kind: "paper",
+    title: `${d.status === "open" ? "Opened" : "Planned"} paper trade ${stock.symbol} · ${d.quantity} @ ₹${d.entryPrice}`,
+    detail: {
+      action: d.status,
+      tradeId: trade.id,
+      entryPrice: d.entryPrice,
+      stopLoss: d.stopLoss,
+      target1: d.target1 ?? null,
+      target2: d.target2 ?? null,
+      quantity: d.quantity,
+    },
+    symbol: stock.symbol,
+    exchange: stock.exchange,
+    href: "/paper",
   });
   return NextResponse.json({ ok: true, tradeId: trade.id });
 }

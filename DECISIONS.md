@@ -105,3 +105,25 @@
   applied manually with `pnpm db:deploy`, never inside the Vercel build.
 - **Known gap:** `tools/yt-dlp` is a macOS binary → caption fetching only
   works locally, not on Vercel. Data written locally is shared via Supabase.
+
+## Phase 11 (2026-10-13) — Activity log + dashboard
+
+- **`ActivityEvent` table** (append-only) records searches, watchlist
+  changes, planner runs and knowledge edits via `src/server/activity.ts`
+  (`logActivity`, never throws). Analyses, paper trades, backtests and
+  transcript processing are *not* duplicated there for the feed/charts —
+  their canonical tables already carry full history; the feed merges both
+  sources (`src/server/dashboard.ts`).
+- **Search history** = the query the user typed when they picked a stock
+  (sent as `query` in `/api/analysis/run`) plus knowledge-base searches
+  (`/api/knowledge/search`, q ≥ 3 chars). Per-keystroke symbol lookups are
+  deliberately not logged (noise).
+- **Charts are hand-rolled SVG** (`src/app/charts.tsx`): stacked columns,
+  line, horizontal bars; tooltips, legends, 2px surface gaps, palette from
+  the dataviz reference instance validated with its script. Palette constant
+  lives in `chart-colors.ts` (plain module) because constants exported from a
+  `"use client"` file arrive as client references in server components.
+- **Cache Components:** dashboard data calls `await connection()` before
+  using the current time (IST day buckets), per Next docs.
+- `/research?symbol=X&exchange=NSE` auto-runs an analysis (used by
+  dashboard links to re-run).

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { logActivity } from "@/server/activity";
 import { getCandles } from "@/server/market/service";
 import { runBacktest, DEFAULT_PARAMS } from "@/server/backtest/engine";
 
@@ -48,6 +49,26 @@ export async function POST(req: Request) {
         completedAt: new Date(),
       },
     });
+    const oos = result.periods.find((p) => /out/i.test(p.label)) ?? result.periods.at(-1);
+    const totalTrades = result.periods.reduce((n, p) => n + p.tradeCount, 0);
+    await logActivity({
+      kind: "backtest",
+      title: `Backtested ${symbol} · ${totalTrades} trades${oos?.winRate != null ? ` · OOS win ${(oos.winRate * 100).toFixed(0)}%` : ""}`,
+      detail: {
+        runId: run.id,
+        days,
+        params,
+        totalTrades,
+        oosLabel: oos?.label ?? null,
+        oosWinRate: oos?.winRate ?? null,
+        oosAvgR: oos?.avgR ?? null,
+        oosProfitFactor: oos?.profitFactor ?? null,
+        oosMaxDrawdownPct: oos?.maxDrawdownPct ?? null,
+      },
+      symbol,
+      exchange,
+      href: "/backtest",
+    });
     return NextResponse.json({
       ok: true,
       runId: run.id,
@@ -62,6 +83,14 @@ export async function POST(req: Request) {
     await db.backtestRun.update({
       where: { id: run.id },
       data: { status: "failed", error: msg, completedAt: new Date() },
+    });
+    await logActivity({
+      kind: "backtest",
+      title: `Backtest failed for ${symbol}`,
+      detail: { runId: run.id, error: msg },
+      symbol,
+      exchange,
+      href: "/backtest",
     });
     return NextResponse.json({ ok: false, error: msg }, { status: 502 });
   }

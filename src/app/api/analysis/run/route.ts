@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { logActivity } from "@/server/activity";
 import { getCandles } from "@/server/market/service";
 import { analyze, type RuleMatchInput } from "@/server/analysis/engine";
 import { ProviderError } from "@/server/market/provider";
@@ -12,6 +13,7 @@ const schema = z.object({
   exchange: z.enum(["NSE", "BSE"]),
   days: z.coerce.number().int().min(100).max(2000).default(400),
   name: z.string().optional(),
+  query: z.string().max(100).optional(),
 });
 
 export async function POST(req: Request) {
@@ -22,7 +24,7 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { symbol, exchange, days, name } = parsed.data;
+  const { symbol, exchange, days, name, query } = parsed.data;
   try {
     const data = await getCandles(symbol, exchange, days, name);
 
@@ -51,6 +53,32 @@ export async function POST(req: Request) {
         asOfDate: new Date(report.asOfDate === "n/a" ? Date.now() : report.asOfDate),
         report: JSON.stringify(report),
       },
+    });
+
+    const href = `/research?symbol=${encodeURIComponent(data.symbol)}&exchange=${data.exchange}`;
+    if (query && query.trim()) {
+      await logActivity({
+        kind: "search",
+        title: `Searched "${query.trim()}" → ${data.symbol}`,
+        detail: { query: query.trim(), name: data.name },
+        symbol: data.symbol,
+        exchange: data.exchange,
+        href,
+      });
+    }
+    await logActivity({
+      kind: "analysis",
+      title: `Analyzed ${data.symbol} · ${report.outcome}`,
+      detail: {
+        outcome: report.outcome,
+        asOfDate: report.asOfDate,
+        analysisId: saved.id,
+        source: data.freshness?.source,
+        candles: data.candles.length,
+      },
+      symbol: data.symbol,
+      exchange: data.exchange,
+      href,
     });
 
     return NextResponse.json({

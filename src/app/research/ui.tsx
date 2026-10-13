@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AnalysisLoader } from "../loader";
 import { CandleChart, type ChartCandle } from "./chart";
 
@@ -81,6 +82,20 @@ export function ResearchClient() {
   const [error, setError] = useState<string | null>(null);
   const [watchMsg, setWatchMsg] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const searchParams = useSearchParams();
+  const autoRan = useRef(false);
+
+  useEffect(() => {
+    if (autoRan.current) return;
+    const symbol = searchParams.get("symbol")?.toUpperCase();
+    const exchange = searchParams.get("exchange");
+    if (!symbol || (exchange !== "NSE" && exchange !== "BSE")) return;
+    autoRan.current = true;
+    const t = setTimeout(() => {
+      void analyze({ symbol, exchange, name: symbol });
+    }, 0);
+    return () => clearTimeout(t);
+  }, [searchParams]);
 
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -100,7 +115,7 @@ export function ResearchClient() {
     return () => clearTimeout(t);
   }, [q]);
 
-  async function analyze(hit: SymbolHit) {
+  async function analyze(hit: SymbolHit, query?: string) {
     setHits([]);
     setQ(`${hit.symbol} (${hit.exchange})`);
     setAnalyzing(true);
@@ -117,6 +132,7 @@ export function ResearchClient() {
           symbol: hit.symbol,
           exchange: hit.exchange,
           name: hit.name,
+          query: query?.trim() || undefined,
         }),
         signal: abortRef.current.signal,
       });
@@ -170,7 +186,7 @@ export function ResearchClient() {
             {hits.map((h) => (
               <li key={`${h.symbol}-${h.exchange}`}>
                 <button
-                  onClick={() => analyze(h)}
+                  onClick={() => analyze(h, q)}
                   className="flex w-full items-baseline justify-between px-3 py-2 text-left text-sm hover:bg-zinc-50"
                 >
                   <span>

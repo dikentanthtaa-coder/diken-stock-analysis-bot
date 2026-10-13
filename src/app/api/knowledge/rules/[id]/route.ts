@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { logActivity } from "@/server/activity";
 
 const patchSchema = z.object({
   title: z.string().min(3).optional(),
@@ -20,6 +21,12 @@ export async function PATCH(
   }
   try {
     const rule = await db.strategyRule.update({ where: { id }, data: body.data });
+    await logActivity({
+      kind: "knowledge",
+      title: `Edited rule · ${rule.title}`,
+      detail: { ruleId: id, fields: Object.keys(body.data) },
+      href: "/knowledge",
+    });
     return NextResponse.json({ ok: true, rule });
   } catch {
     return NextResponse.json({ ok: false, error: "Rule not found" }, { status: 404 });
@@ -32,7 +39,13 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-    await db.strategyRule.delete({ where: { id } });
+    const removed = await db.strategyRule.delete({ where: { id } });
+    await logActivity({
+      kind: "knowledge",
+      title: `Deleted rule · ${removed.title}`,
+      detail: { ruleId: id },
+      href: "/knowledge",
+    });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false, error: "Rule not found" }, { status: 404 });

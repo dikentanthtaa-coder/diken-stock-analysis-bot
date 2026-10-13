@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logActivity } from "@/server/activity";
 import { z } from "zod";
 import { runExtraction } from "@/server/knowledge/service";
 
@@ -13,6 +14,12 @@ export async function POST(req: Request) {
   }
   try {
     const summary = await runExtraction(body.data.useAi);
+    await logActivity({
+      kind: "knowledge",
+      title: `Ran extraction · ${summary.conceptsUpserted} concepts · ${summary.candidateRules + summary.aiRules} rules from ${summary.videosScanned} videos`,
+      detail: { ...summary },
+      href: "/knowledge",
+    });
     return NextResponse.json({ ok: true, summary });
   } catch (error) {
     return NextResponse.json(

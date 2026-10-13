@@ -248,3 +248,22 @@ model Setting {
   value     String // JSON-encoded
   updatedAt DateTime @updatedAt
 }
+
+// ---------- Activity log ----------
+
+// Append-only record of what the user did in the app (searches, analyses,
+// trades, backtests, learning runs…). Feeds the dashboard timeline/charts.
+model ActivityEvent {
+  id        String   @id @default(cuid())
+  // search | analysis | watchlist | paper | backtest | planner | knowledge | learning
+  kind      String
+  title     String
+  detail    String? // JSON blob, shape depends on kind
+  symbol    String?
+  exchange  String?
+  href      String? // where to go to see it
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([kind, createdAt])
+}
