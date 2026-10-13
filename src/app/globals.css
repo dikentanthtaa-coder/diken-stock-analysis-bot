@@ -205,11 +205,6 @@ main {
 }
 html {
   -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;
-}
-body {
-  overflow-x: hidden;
-  overscroll-behavior-y: none;
 }
 
 /* ---- Responsive tables: rows become labelled cards on phones ----
@@ -257,5 +252,31 @@ body {
   }
   table.rtable td:empty {
     display: none;
+  }
+}
+
+/* Breathing room between table columns on tablet/desktop */
+@media (min-width: 640px) {
+  table.rtable th,
+  table.rtable td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  table.rtable th:first-child,
+  table.rtable td:first-child {
+    padding-left: 0;
+  }
+  table.rtable th:last-child,
+  table.rtable td:last-child {
+    padding-right: 0;
+  }
+  /* Bordered tables (backtest/journal) keep their inner gutter */
+  .rounded-lg.border > table.rtable th:first-child,
+  .rounded-lg.border > table.rtable td:first-child {
+    padding-left: 0.75rem;
+  }
+  .rounded-lg.border > table.rtable th:last-child,
+  .rounded-lg.border > table.rtable td:last-child {
+    padding-right: 0.75rem;
   }
 }
